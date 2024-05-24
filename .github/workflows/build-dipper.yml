@@ -286,7 +286,7 @@ jobs:
         sed -i 's/device.name2=toro/device.name2=/g' AnyKernel3/anykernel.sh
         sed -i 's/device.name3=toroplus/device.name3=/g' AnyKernel3/anykernel.sh
         sed -i 's/device.name4=tuna/device.name4=/g' AnyKernel3/anykernel.sh
-        sed -i 's|BLOCK=/dev/block/platform/omap/omap_hsmmc.0/by-name/boot|BLOCK=auto;|g' AnyKernel3/anykernel.sh
+        sed -i 's|BLOCK=/dev/block/platform/omap/omap_hsmmc.0/by-name/boot|BLOCK=auto|g' AnyKernel3/anykernel.sh
         sed -i 's/is_slot_device=0;/is_slot_device=auto;/g' AnyKernel3/anykernel.sh
         cp android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_IMAGE_NAME }} AnyKernel3/
         if [ ${{ env.CHECK_DTBO_IS_OK }} = true ]; then
