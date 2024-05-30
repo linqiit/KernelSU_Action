@@ -1,0 +1,56 @@
+name: Build Android Kernel Script
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Cache ccache
+      uses: actions/cache@v2
+      with:
+        path: ~/.ccache
+        key: ${{ runner.os }}-ccache-${{ hashFiles('**/*.c', '**/*.h') }}
+        restore-keys: |
+          ${{ runner.os }}-ccache
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ccache aria2
+        echo "BUILD_TIME=$(TZ=Asia/Shanghai date "+%Y%m%d%H%M")" >> $GITHUB_ENV
+
+    - name: Set up ccache and check before build
+      run: |
+        ccache -M 4G
+        echo "ccache stats before build:"
+        ccache -s
+
+    - name: Run build script
+      shell: bash
+      run: |
+        chmod +x build.sh
+        ./build.sh
+      env:
+        pwd: ${{ github.workspace }}
+        
+    - name: Check ccache stats after build
+      run: |
+        echo "ccache stats after build:"
+        ccache -s
+
+    - name: Upload build artifacts
+      if: success()
+      uses: actions/upload-artifact@v3
+      with:
+        name: kernel-build
+        path: |
+          ${{ github.workspace }}/workspace/android-kernel/out/arch/arm64/boot/Image.gz
+          ${{ github.workspace }}/workspace/android-kernel/out/arch/arm64/boot/Image.gz-dtb
+          ${{ github.workspace }}/workspace/AnyKernel3-${{ env.BUILD_TIME }}.zip
