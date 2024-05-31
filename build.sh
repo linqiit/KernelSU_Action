@@ -254,7 +254,7 @@ apply_patches_and_configurations() {
         echo "CONFIG_CC_WERROR=n" >> arch/$ARCH/configs/$KERNEL_CONFIG
     fi
 
-    if [ $KVM = "true" ]; then
+    if [ $CONFIG_KVM = "true" ]; then
         echo "CONFIG_VIRTUALIZATION=y" | tee -a arch/$ARCH/configs/$KERNEL_CONFIG >/dev/null
         echo "CONFIG_KVM=y" | tee -a arch/$ARCH/configs/$KERNEL_CONFIG >/dev/null
         echo "CONFIG_KVM_MMIO=y" | tee -a arch/$ARCH/configs/$KERNEL_CONFIG >/dev/null
@@ -269,7 +269,7 @@ apply_patches_and_configurations() {
             patch -p0 < xt_qtaguid.patch
     fi
 
-    if [ $KALI_NETHUNTER_PATCH }} = true ]; then
+    if [ $KALI_NETHUNTER_PATCH = "true" ]; then
         git clone https://gitlab.com/kalilinux/nethunter/build-scripts/kali-nethunter-kernel.git
         patch -p2 < kali-nethunter-kernel/4.14/add-rtl88xxau-5.6.4.2-drivers.patch
         patch -p2 < kali-nethunter-kernel/4.14/add-wifi-injection-4.14.patch
