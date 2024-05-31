@@ -333,7 +333,7 @@ bootimage() {
     if [ $BUILD_BOOT_IMG = "true" ] && [ $BUILD_FILE_OK = "true" ]; then
         cd $WORK
         mkdir magiskboot && cd magiskboot
-        aria2c $BOOT_SOURCE boot.img
+        aria2c -o boot.img $BOOT_SOURCE
         case $HOST_ARCH in
             armv7* | armv8l | arm64 | armhf | arm) aria2c https://raw.githubusercontent.com/magojohnji/magiskboot-linux/main/arm64-v8a/magiskboot && chmod +x magiskboot ;;
             i*86 | x86 | amd64 | x86_64) aria2c https://raw.githubusercontent.com/magojohnji/magiskboot-linux/main/x86_64/magiskboot && chmod +x magiskboot  ;;
@@ -347,7 +347,7 @@ bootimage() {
 
 main() {
     if [ "$#" -eq 0 ]; then
-        steps=("install_tools" "download_clang_compiler" "download_appropriate_gcc" "set_path" "clone_kernel" "merge_kernel_configs" "setup_kernelsu" "lxc_kali" "apply_patches_and_configurations" "build_kernel" "bootimage" "package_anykernel3")
+        steps=("install_tools" "download_clang_compiler" "download_appropriate_gcc" "set_path" "clone_kernel" "merge_kernel_configs" "setup_kernelsu" "lxc_kali" "apply_patches_and_configurations" "build_kernel" "package_anykernel3" "bootimage")
     else
         steps=("$@")
     fi
@@ -374,9 +374,9 @@ main() {
                                               ;;
             build_kernel )                    build_kernel
                                               ;;
-            bootimage )                       bootimage
-                                              ;;
             package_anykernel3 )              package_anykernel3
+                                              ;;
+            bootimage )                       bootimage
                                               ;;
             * )                               echo "Invalid option: $step"
                                               exit 1
