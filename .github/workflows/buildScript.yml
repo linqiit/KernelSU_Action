@@ -1,4 +1,4 @@
-name: Build Android Kernel Script
+name: Build Kernel Script
 
 on:
   push:
@@ -39,7 +39,7 @@ jobs:
         ./build.sh
       env:
         pwd: ${{ github.workspace }}
-        
+
     - name: Check ccache stats after build
       run: |
         echo "ccache stats after build:"
