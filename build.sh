@@ -18,7 +18,7 @@ ARCH="arm64"
 DEVICE="dipper"
 KERNEL_DIR="android-kernel"
 
-BUILD_BOOT_IMG="true"
+BUILD_BOOT_IMG="false"
 BOOT_SOURCE="https://raw.githubusercontent.com/linqiit/Filee/master/Boot/dipper-crDroid-13.0-boot.img"
 
 # Clang默认true启用谷歌 自定义暂时只支持tar.gz压缩包
@@ -52,7 +52,7 @@ DISABLE_CC_WERROR="true"
 
 ENABLE_CCACHE="true"
 CONFIG_KVM="false"
-LXC="false"
+LXC="true"
 LXC_PATCH="false"
 KALI_NETHUNTER="false"
 KALI_NETHUNTER_PATCH="false"
