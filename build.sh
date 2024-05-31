@@ -8,9 +8,9 @@ set -e
 export WORK="$(pwd)/workspace"
 
 # 内核仓库分支及其他配置
-KERNEL_SOURCE="https://github.com/PainKiller3/kernel_xiaomi_sdm845"
-KERNEL_BRANCH="thirteen"
-KERNEL_CONFIG="vendor/xiaomi/silvercore_defconfig"
+KERNEL_SOURCE="https://github.com/KaguraiYoRoy/android_kernel_xiaomi_sdm845"
+KERNEL_BRANCH="tsukasa-erofs"
+KERNEL_CONFIG="vendor/xiaomi/mi845_defconfig"
 KERNEL_CONFIG_2="vendor/xiaomi/dipper.config"
 KERNEL_IMAGE="Image.gz-dtb"
 export ARCH="arm64"
@@ -53,6 +53,7 @@ ARCH=arm64 \
 CLANG_TRIPLE=aarch64-linux-gnu- \
 CROSS_COMPILE=aarch64-linux-android- \
 CROSS_COMPILE_ARM32=arm-linux-androideabi- \
+LLVM=1 \
 LLVM_IAS=1"
 # C="AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip LLVM_IAS=1 LLVM=1 LD=ld.lld"
 
@@ -86,8 +87,8 @@ prepare_ccache() {
 }
 
 install_tools() {
-    sudo apt update && sudo apt -y install bc bison build-essential ccache curl flex g++-multilib gcc-multilib git gnupg gperf imagemagick lib32ncurses5-dev lib32readline-dev lib32z1-dev liblz4-tool libncurses5-dev libncurses5 libsdl1.2-dev libssl-dev libelf-dev libwxgtk3.0-gtk3-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev make unzip python-is-python3 aria2
-    
+    sudo apt update && sudo apt -y install bc bison build-essential ccache curl flex g++-multilib gcc-multilib git gnupg gperf imagemagick lib32ncurses5-dev lib32readline-dev lib32z1-dev liblz4-tool libncurses5-dev libncurses5 libsdl1.2-dev libssl-dev libelf-dev libwxgtk3.0-gtk3-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev make unzip python-is-python2 aria2
+
     # sudo rm /bin/python && sudo ln -s /bin/python2.7 /bin/python
     mkdir -p $WORK
 }
@@ -247,8 +248,8 @@ set_path() {
 
 build_kernel() {
     cd $WORK/$KERNEL_DIR
-    rm -rf out && mkdir -p out
-    touch $BUILD_LOG
+    make clean && make mrproper && rm -rf out
+    : > $BUILD_LOG
     prepare_ccache
     make -j$(nproc --all) CC=clang $args $KERNEL_CONFIG
     if [ $ENABLE_CCACHE = "true" ]; then
@@ -256,7 +257,7 @@ build_kernel() {
     else
         CC="clang"
     fi
-    make -j$(nproc --all) CC="$CC" $args
+    make -j$(nproc --all) CC="$CC" $args 2>&1 | tee -a $BUILD_LOG
 }
 
 package_anykernel3() {
