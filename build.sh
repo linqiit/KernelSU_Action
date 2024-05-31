@@ -221,7 +221,7 @@ apply_patches_and_configurations() {
         if aria2c -s16 -x16 -k1M https://raw.githubusercontent.com/dabao1955/kernel_build_action/main/kernelsu/ksupatch.sh &&
            aria2c -s16 -x16 -k1M https://raw.githubusercontent.com/bin456789/KernelSU-Action/main/patches/backport-path-umount.patch &&
            aria2c -s16 -x16 -k1M https://raw.githubusercontent.com/bin456789/KernelSU-Action/main/patches/allow-init-exec-ksud-under-nosuid.patch; then
-            bash patches.sh
+            bash ksupatch.sh
             # find . -name '*.patch' -print0 | xargs -0 -I{} git apply {}
         else
             return 1
