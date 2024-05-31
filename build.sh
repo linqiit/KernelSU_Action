@@ -38,7 +38,7 @@ GCC_64_BRANCH="main"
 GCC_AARCH64_DIR="$WORK/gcc-64/bin"
 
 ARM="true"
-GCC_32_SOURCE="https://github.com/mvaisakh/gcc-arm.git"
+GCC_32_SOURCE="https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/+archive/refs/tags/android-12.1.0_r27.tar.gz"
 GCC_32_BRANCH="gcc-master"
 GCC_ARM_DIR="$WORK/gcc-32/bin"
 
