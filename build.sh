@@ -209,11 +209,11 @@ lxc_kali() {
         cd $WORK/$KERNEL_DIR
         aria2c https://github.com/Fyg369/lxc-docker/raw/main/LXC-DOCKER-OPEN-CONFIG.sh && chmod +x LXC-DOCKER-OPEN-CONFIG.sh
         # echo "CONFIG_DOCKER=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
-        . "./LXC-DOCKER-OPEN-CONFIG.sh arch/$ARCH/configs/$KERNEL_CONFIG -w"
+        ./LXC-DOCKER-OPEN-CONFIG.sh arch/$ARCH/configs/$KERNEL_CONFIG -w
     fi
     if [ $KALI_NETHUNTER = "true" ]; then
         aria2c https://github.com/Biohazardousrom/Kali-defconfig-checker/raw/master/check-kernel-config && chmod +x check-kernel-config
-        source "./check-kernel-config arch/$ARCH/configs/$KERNEL_CONFIG -w"
+        ./check-kernel-config arch/$ARCH/configs/$KERNEL_CONFIG -w
     fi
 }
 
