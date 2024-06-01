@@ -269,9 +269,9 @@ apply_patches_and_configurations() {
 
     if [ $KALI_NETHUNTER_PATCH = "true" ]; then
         git clone https://gitlab.com/kalilinux/nethunter/build-scripts/kali-nethunter-kernel.git
-        patch -p2 < kali-nethunter-kernel/4.14/add-rtl88xxau-5.6.4.2-drivers.patch
-        patch -p2 < kali-nethunter-kernel/4.14/add-wifi-injection-4.14.patch
-        patch -p2 < kali-nethunter-kernel/4.14/fix-ath9k-naming-conflict.patch
+        patch -p1 < kali-nethunter-kernel/patches/4.14/add-rtl88xxau-5.6.4.2-drivers.patch
+        patch -p1 < kali-nethunter-kernel/patches/4.14/add-wifi-injection-4.14.patch
+        patch -p1 < kali-nethunter-kernel/patches/4.14/fix-ath9k-naming-conflict.patch
     fi
 }
 
