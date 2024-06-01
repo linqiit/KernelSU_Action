@@ -51,11 +51,11 @@ DISABLELTO="false"
 DISABLE_CC_WERROR="true"
 
 ENABLE_CCACHE="true"
-CONFIG_KVM="false"
+CONFIG_KVM="true"
 LXC="true"
-LXC_PATCH="false"
-KALI_NETHUNTER="false"
-KALI_NETHUNTER_PATCH="false"
+LXC_PATCH="true"
+KALI_NETHUNTER="true"
+KALI_NETHUNTER_PATCH="true"
 
 args="O=out \
 ARCH=arm64 \
@@ -90,7 +90,7 @@ msg() {
 prepare_ccache() {
     if [ $ENABLE_CCACHE = "true" ]; then
         # export CCACHE_DIR="$WORK/.ccache"
-        ccache -M 4G
+        ccache -M 2G
         ccache -s
     fi
 }

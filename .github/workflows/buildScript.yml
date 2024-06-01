@@ -28,7 +28,7 @@ jobs:
 
     - name: Set up ccache and check before build
       run: |
-        ccache -M 4G
+        ccache -M 2G
         echo "ccache stats before build:"
         ccache -s
 
