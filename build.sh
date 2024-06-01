@@ -218,9 +218,7 @@ lxc_kali() {
 apply_patches_and_configurations() {
     cd $WORK/$KERNEL_DIR
     if [ $APPLY_KSU_PATCH = "true" ]; then
-        if aria2c -s16 -x16 -k1M https://raw.githubusercontent.com/dabao1955/kernel_build_action/main/kernelsu/ksupatch.sh &&
-           aria2c -s16 -x16 -k1M https://raw.githubusercontent.com/bin456789/KernelSU-Action/main/patches/backport-path-umount.patch &&
-           aria2c -s16 -x16 -k1M https://raw.githubusercontent.com/bin456789/KernelSU-Action/main/patches/allow-init-exec-ksud-under-nosuid.patch; then
+        if aria2c -s16 -x16 -k1M https://raw.githubusercontent.com/dabao1955/kernel_build_action/main/kernelsu/ksupatch.sh; then
             bash ksupatch.sh
             # find . -name '*.patch' -print0 | xargs -0 -I{} git apply {}
         else
@@ -264,9 +262,9 @@ apply_patches_and_configurations() {
     if [ $LXC_PATCH = "true" ]; then
         grep -q "CONFIG_ANDROID_PARANOID_NETWORK" arch/$ARCH/configs/$KERNEL_CONFIG && sed -i 's/CONFIG_ANDROID_PARANOID_NETWORK=y/# CONFIG_ANDROID_PARANOID_NETWORK is not set/' arch/$ARCH/configs/$KERNEL_CONFIG
         aria2c https://github.com/wu17481748/lxc-docker/raw/main/cgroup.patch
-            patch -p0 < cgroup.patch
-        aria2c https://github.com/wu17481748/lxc-docker/raw/main/xt_qtaguid.patch
-            patch -p0 < xt_qtaguid.patch
+            patch $WORK/$KERNEL_DIR/kernel/cgroup.c < cgroup.patch
+        # aria2c https://github.com/wu17481748/lxc-docker/raw/main/xt_qtaguid.patch
+            # patch -p0 < xt_qtaguid.patch
     fi
 
     if [ $KALI_NETHUNTER_PATCH = "true" ]; then
