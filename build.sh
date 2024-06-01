@@ -50,12 +50,13 @@ APPLY_KSU_PATCH="true"
 DISABLELTO="false"
 DISABLE_CC_WERROR="true"
 
+# 先画个大饼 不确定是否成功
 ENABLE_CCACHE="true"
 CONFIG_KVM="true"
 LXC="true"
 LXC_PATCH="true"
-KALI_NETHUNTER="true"
-KALI_NETHUNTER_PATCH="true"
+KALI_NETHUNTER="false"
+KALI_NETHUNTER_PATCH="false"
 
 args="O=out \
 ARCH=arm64 \
