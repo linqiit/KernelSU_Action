@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# set -e
 # set -e -x
 set -eux
 
@@ -56,8 +55,8 @@ ENABLE_CCACHE="true"
 CONFIG_KVM="false"
 LXC="true"
 LXC_PATCH="true"
-KALI_NETHUNTER="true"
-KALI_NETHUNTER_PATCH="true"
+KALI_NETHUNTER="false"
+KALI_NETHUNTER_PATCH="false"
 
 args="O=out \
 ARCH=arm64 \
