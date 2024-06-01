@@ -53,8 +53,8 @@ DISABLE_CC_WERROR="true"
 # 先画个大饼 实测报错 有需要自行研究吧 毁灭吧
 ENABLE_CCACHE="true"
 CONFIG_KVM="false"
-LXC="false"
-LXC_PATCH="false"
+LXC="true"
+LXC_PATCH="true"
 KALI_NETHUNTER="false"
 KALI_NETHUNTER_PATCH="false"
 
