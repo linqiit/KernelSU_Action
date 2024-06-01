@@ -219,9 +219,10 @@ lxc_kali() {
 apply_patches_and_configurations() {
     cd $WORK/$KERNEL_DIR
     if [ $APPLY_KSU_PATCH = "true" ]; then
-        if aria2c -s16 -x16 -k1M https://raw.githubusercontent.com/dabao1955/kernel_build_action/main/kernelsu/ksupatch.sh; then
+        if aria2c -s16 -x16 -k1M https://raw.githubusercontent.com/dabao1955/kernel_build_action/main/kernelsu/ksupatch.sh &&
+           aria2c -s16 -x16 -k1M https://raw.githubusercontent.com/bin456789/KernelSU-Action/main/patches/allow-init-exec-ksud-under-nosuid.patch; then
             bash ksupatch.sh
-            # find . -name '*.patch' -print0 | xargs -0 -I{} git apply {}
+            find . -name '*.patch' -print0 | xargs -0 -I{} git apply {}
         else
             return 1
         fi
@@ -320,7 +321,7 @@ package_anykernel3() {
         sed -i 's/device.name3=toroplus/device.name3=/g' AnyKernel3/anykernel.sh
         sed -i 's/device.name4=tuna/device.name4=/g' AnyKernel3/anykernel.sh
         sed -i 's|BLOCK=/dev/block/platform/omap/omap_hsmmc.0/by-name/boot|BLOCK=auto|g' AnyKernel3/anykernel.sh
-        sed -i 's/is_slot_device=0;/is_slot_device=auto;/g' AnyKernel3/anykernel.sh
+        sed -i 's/IS_SLOT_DEVICE=0;/IS_SLOT_DEVICE=auto;/g' AnyKernel3/anykernel.sh
         cp android-kernel/out/arch/$ARCH/boot/$KERNEL_IMAGE AnyKernel3/
         rm -rf AnyKernel3/.git AnyKernel3/README.md AnyKernel3/modules AnyKernel3/patch AnyKernel3/ramdisk AnyKernel3/.github
         cd AnyKernel3
