@@ -47,12 +47,12 @@ KERNELSU_TAG="main"
 KPROBES_CONFIG="true"
 OVERLAYFS_CONFIG="true"
 APPLY_KSU_PATCH="true"
-DISABLELTO="false"
+DISABLELTO="true"
 DISABLE_CC_WERROR="true"
 
 # 先画个大饼 不确定是否成功
 ENABLE_CCACHE="true"
-CONFIG_KVM="false"
+CONFIG_KVM="true"
 LXC="true"
 LXC_PATCH="true"
 KALI_NETHUNTER="true"
@@ -206,7 +206,7 @@ setup_kernelsu() {
 lxc_kali() {
     if [ $LXC = "true" ]; then
         cd $WORK/$KERNEL_DIR
-        aria2c https://github.com/wu17481748/lxc-docker/raw/main/LXC-DOCKER-OPEN-CONFIG.sh
+        aria2c https://github.com/Fyg369/lxc-docker/raw/main/LXC-DOCKER-OPEN-CONFIG.sh
         echo "CONFIG_DOCKER=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
         bash LXC-DOCKER-OPEN-CONFIG.sh $KERNEL_CONFIG -w
     fi
@@ -256,9 +256,11 @@ apply_patches_and_configurations() {
 
     if [ $CONFIG_KVM = "true" ]; then
         echo "CONFIG_VIRTUALIZATION=y" | tee -a arch/$ARCH/configs/$KERNEL_CONFIG >/dev/null
-        echo "CONFIG_KVM=y" | tee -a arch/$ARCH/configs/$KERNEL_CONFIG >/dev/null
-        echo "CONFIG_KVM_MMIO=y" | tee -a arch/$ARCH/configs/$KERNEL_CONFIG >/dev/null
-        echo "CONFIG_KVM_ARM_HOST=y" | tee -a arch/$ARCH/configs/$KERNEL_CONFIG >/dev/null
+        echo "CONFIG_KVM=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
+        # echo "CONFIG_KVM_MMIO=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
+        # echo "CONFIG_KVM_ARM_HOST=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
+        echo "CONFIG_VHOST_NET=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
+        echo "CONFIG_VHOST_CROSS_ENDIAN_LEGACY=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
     fi
 
     if [ $LXC_PATCH = "true" ]; then
