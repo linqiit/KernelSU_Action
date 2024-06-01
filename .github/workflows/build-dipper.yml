@@ -2,8 +2,6 @@ name: Build Kernel D
 on:
 #  push:
   workflow_dispatch:
-  schedule:
-    - cron: "0 2 * * *" # 每日 10 点触发,非默认分支此代码无效
 
 jobs:
   build:
