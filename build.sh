@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # set -e
-set -e -x
+# set -e -x
+set -eux
 
 # BUILD_TIME=$(TZ='Asia/Shanghai' date +'%Y%m%d-%H%M%S')
 
@@ -52,7 +53,7 @@ DISABLE_CC_WERROR="true"
 
 # 先画个大饼 不确定是否成功
 ENABLE_CCACHE="true"
-CONFIG_KVM="true"
+CONFIG_KVM="false"
 LXC="true"
 LXC_PATCH="true"
 KALI_NETHUNTER="true"
@@ -208,13 +209,14 @@ lxc_kali() {
         cd $WORK/$KERNEL_DIR
         aria2c https://github.com/Fyg369/lxc-docker/raw/main/LXC-DOCKER-OPEN-CONFIG.sh && chmod +x LXC-DOCKER-OPEN-CONFIG.sh
         # echo "CONFIG_DOCKER=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
-        ./LXC-DOCKER-OPEN-CONFIG.sh $KERNEL_CONFIG -w
+        . "${0%/*}/LXC-DOCKER-OPEN-CONFIG.sh $KERNEL_CONFIG -w"
     fi
     if [ $KALI_NETHUNTER = "true" ]; then
         aria2c https://github.com/Biohazardousrom/Kali-defconfig-checker/raw/master/check-kernel-config && chmod +x check-kernel-config
-        ./check-kernel-config $KERNEL_CONFIG -w
+        source "${0%/*}/check-kernel-config $KERNEL_CONFIG -w"
     fi
 }
+
 
 apply_patches_and_configurations() {
     cd $WORK/$KERNEL_DIR
