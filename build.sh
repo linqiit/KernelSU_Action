@@ -1,12 +1,11 @@
 #!/bin/bash
 
+set -e
 # set -e -x
-set -eux
 
 # BUILD_TIME=$(TZ='Asia/Shanghai' date +'%Y%m%d-%H%M%S')
 
 export WORK="$(pwd)/workspace"
-export HOST_ARCH=$(dpkg --print-architecture)
 
 # 内核仓库分支及其他配置
 KERNEL_SOURCE="https://github.com/PainKiller3/kernel_xiaomi_sdm845"
@@ -14,12 +13,9 @@ KERNEL_BRANCH="thirteen"
 KERNEL_CONFIG="vendor/xiaomi/silvercore_defconfig"
 KERNEL_CONFIG_2="vendor/xiaomi/dipper.config"
 KERNEL_IMAGE="Image.gz-dtb"
-ARCH="arm64"
+export ARCH="arm64"
 DEVICE="dipper"
 KERNEL_DIR="android-kernel"
-
-BUILD_BOOT_IMG="false"
-BOOT_SOURCE="https://raw.githubusercontent.com/linqiit/Filee/master/Boot/dipper-crDroid-13.0-boot.img"
 
 # Clang默认true启用谷歌 自定义暂时只支持tar.gz压缩包
 CLANG_AOSP="false"
@@ -39,7 +35,7 @@ GCC_AARCH64_DIR="$WORK/gcc-64/bin"
 
 ARM="true"
 GCC_32_SOURCE="https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/+archive/refs/tags/android-12.1.0_r27.tar.gz"
-GCC_32_BRANCH="gcc-master"
+GCC_32_BRANCH="master"
 GCC_ARM_DIR="$WORK/gcc-32/bin"
 
 KERNELSU="true"
@@ -47,23 +43,16 @@ KERNELSU_TAG="v0.9.5"
 KPROBES_CONFIG="true"
 OVERLAYFS_CONFIG="true"
 APPLY_KSU_PATCH="true"
-DISABLELTO="false"
-DISABLE_CC_WERROR="true"
+LTO="false"
+CC_WERROR="true"
 
-# 先画个大饼 实测报错 有需要自行研究吧 毁灭吧
 ENABLE_CCACHE="true"
-CONFIG_KVM="false"
-LXC="true"
-LXC_PATCH="true"
-KALI_NETHUNTER="false"
-KALI_NETHUNTER_PATCH="false"
 
 args="O=out \
 ARCH=arm64 \
 CLANG_TRIPLE=aarch64-linux-gnu- \
 CROSS_COMPILE=aarch64-linux-android- \
 CROSS_COMPILE_ARM32=arm-linux-androideabi- \
-LLVM=1 \
 LLVM_IAS=1"
 # C="AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip LLVM_IAS=1 LLVM=1 LD=ld.lld"
 
@@ -91,13 +80,13 @@ msg() {
 prepare_ccache() {
     if [ $ENABLE_CCACHE = "true" ]; then
         # export CCACHE_DIR="$WORK/.ccache"
-        ccache -M 2G
+        ccache -M 4G
         ccache -s
     fi
 }
 
 install_tools() {
-    sudo apt update && sudo apt -y install bc bison build-essential ccache curl flex g++-multilib gcc-multilib git gnupg gperf imagemagick libc6 lib32ncurses5-dev lib32readline-dev lib32z1-dev liblz4-tool libncurses5-dev libncurses5 libsdl1.2-dev libssl-dev libelf-dev libwxgtk3.0-gtk3-dev libxml2 libxml2-utils libncurses-dev lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev make unzip python-is-python3 aria2
+    sudo apt update && sudo apt -y install bc bison build-essential ccache curl flex g++-multilib gcc-multilib git gnupg gperf imagemagick lib32ncurses5-dev lib32readline-dev lib32z1-dev liblz4-tool libncurses5-dev libncurses5 libsdl1.2-dev libssl-dev libelf-dev libwxgtk3.0-gtk3-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev make unzip python-is-python3 aria2
 
     # sudo rm /bin/python && sudo ln -s /bin/python2.7 /bin/python
     mkdir -p $WORK
@@ -136,7 +125,7 @@ download_gcc() {
   case $source in
     *.git)
       rm -rf $target_dir
-      git clone --depth=1 -b $branch $source $target_dir
+      git clone -b $branch $source $target_dir
       ;;
     *.tar.gz)
       mkdir -p $target_dir
@@ -203,26 +192,13 @@ setup_kernelsu() {
     fi
 }
 
-lxc_kali() {
-    if [ $LXC = "true" ]; then
-        cd $WORK/$KERNEL_DIR
-        aria2c https://github.com/Fyg369/lxc-docker/raw/main/LXC-DOCKER-OPEN-CONFIG.sh && chmod +x LXC-DOCKER-OPEN-CONFIG.sh
-        # echo "CONFIG_DOCKER=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
-        ./LXC-DOCKER-OPEN-CONFIG.sh arch/$ARCH/configs/$KERNEL_CONFIG -w
-    fi
-    if [ $KALI_NETHUNTER = "true" ]; then
-        aria2c https://github.com/Biohazardousrom/Kali-defconfig-checker/raw/master/check-kernel-config && chmod +x check-kernel-config
-        ./check-kernel-config arch/$ARCH/configs/$KERNEL_CONFIG -w
-    fi
-}
-
-
 apply_patches_and_configurations() {
     cd $WORK/$KERNEL_DIR
     if [ $APPLY_KSU_PATCH = "true" ]; then
-        if aria2c -s16 -x16 -k1M https://raw.githubusercontent.com/dabao1955/kernel_build_action/main/kernelsu/ksupatch.sh &&
+        if aria2c -s16 -x16 -k1M https://raw.githubusercontent.com/xiaoleGun/KernelSU_Action/main/patches/patches.sh &&
+           aria2c -s16 -x16 -k1M https://raw.githubusercontent.com/bin456789/KernelSU-Action/main/patches/backport-path-umount.patch &&
            aria2c -s16 -x16 -k1M https://raw.githubusercontent.com/bin456789/KernelSU-Action/main/patches/allow-init-exec-ksud-under-nosuid.patch; then
-            bash ksupatch.sh
+            bash patches.sh
             find . -name '*.patch' -print0 | xargs -0 -I{} git apply {}
         else
             return 1
@@ -244,39 +220,15 @@ apply_patches_and_configurations() {
         echo "CONFIG_OVERLAY_FS=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
     fi
 
-    if [ $DISABLELTO = "true" ]; then
+    if [ $LTO = "true" ]; then
         sed -i 's/CONFIG_LTO=y/CONFIG_LTO=n/' arch/$ARCH/configs/$KERNEL_CONFIG
         sed -i 's/CONFIG_LTO_CLANG=y/CONFIG_LTO_CLANG=n/' arch/$ARCH/configs/$KERNEL_CONFIG
         sed -i 's/CONFIG_THINLTO=y/CONFIG_THINLTO=n/' arch/$ARCH/configs/$KERNEL_CONFIG
         echo "CONFIG_LTO_NONE=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
     fi
 
-    if [ $DISABLE_CC_WERROR = "true" ]; then
+    if [ $CC_WERROR = "true" ]; then
         echo "CONFIG_CC_WERROR=n" >> arch/$ARCH/configs/$KERNEL_CONFIG
-    fi
-
-    if [ $CONFIG_KVM = "true" ]; then
-        echo "CONFIG_VIRTUALIZATION=y" | tee -a arch/$ARCH/configs/$KERNEL_CONFIG >/dev/null
-        echo "CONFIG_KVM=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
-        # echo "CONFIG_KVM_MMIO=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
-        # echo "CONFIG_KVM_ARM_HOST=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
-        echo "CONFIG_VHOST_NET=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
-        echo "CONFIG_VHOST_CROSS_ENDIAN_LEGACY=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
-    fi
-
-    if [ $LXC_PATCH = "true" ]; then
-        grep -q "CONFIG_ANDROID_PARANOID_NETWORK" arch/$ARCH/configs/$KERNEL_CONFIG && sed -i 's/CONFIG_ANDROID_PARANOID_NETWORK=y/# CONFIG_ANDROID_PARANOID_NETWORK is not set/' arch/$ARCH/configs/$KERNEL_CONFIG
-        aria2c https://github.com/wu17481748/lxc-docker/raw/main/cgroup.patch
-            patch $WORK/$KERNEL_DIR/kernel/cgroup.c < cgroup.patch
-        # aria2c https://github.com/wu17481748/lxc-docker/raw/main/xt_qtaguid.patch
-            # patch -p0 < xt_qtaguid.patch
-    fi
-
-    if [ $KALI_NETHUNTER_PATCH = "true" ]; then
-        git clone https://gitlab.com/kalilinux/nethunter/build-scripts/kali-nethunter-kernel.git
-        patch -p1 < kali-nethunter-kernel/patches/4.14/add-rtl88xxau-5.6.4.2-drivers.patch
-        patch -p1 < kali-nethunter-kernel/patches/4.14/add-wifi-injection-4.14.patch
-        patch -p1 < kali-nethunter-kernel/patches/4.14/fix-ath9k-naming-conflict.patch
     fi
 }
 
@@ -295,8 +247,8 @@ set_path() {
 
 build_kernel() {
     cd $WORK/$KERNEL_DIR
-    make clean && make mrproper && rm -rf out
-    : > $BUILD_LOG
+    rm -rf out && mkdir -p out
+    touch $BUILD_LOG
     prepare_ccache
     make -j$(nproc --all) CC=clang $args $KERNEL_CONFIG
     if [ $ENABLE_CCACHE = "true" ]; then
@@ -304,53 +256,29 @@ build_kernel() {
     else
         CC="clang"
     fi
-    make -j$(nproc --all) CC="$CC" $args 2>&1 | tee -a $BUILD_LOG
-    if [ -f out/arch/$ARCH/boot/$KERNEL_IMAGE ]; then
-        BUILD_FILE_OK="true"
-    else
-        msg "Kernel output file is empty" error
-        exit 1
-    fi
+    make -j$(nproc --all) CC="$CC" $args
 }
 
 package_anykernel3() {
-    if [ $BUILD_FILE_OK = "true" ]; then
-        cd $WORK
-        git clone --depth=1 https://github.com/osm0sis/AnyKernel3 AnyKernel3
-        sed -i "s/kernel.string=ExampleKernel by osm0sis @ xda-developers/kernel.string=By Lin with ${BUILD_TIME}/g" AnyKernel3/anykernel.sh
-        sed -i 's/do.devicecheck=1/do.devicecheck=0/g' AnyKernel3/anykernel.sh
-        sed -i "s/device.name1=maguro/device.name1=${DEVICE}/g" AnyKernel3/anykernel.sh
-        sed -i 's/device.name2=toro/device.name2=/g' AnyKernel3/anykernel.sh
-        sed -i 's/device.name3=toroplus/device.name3=/g' AnyKernel3/anykernel.sh
-        sed -i 's/device.name4=tuna/device.name4=/g' AnyKernel3/anykernel.sh
-        sed -i 's|BLOCK=/dev/block/platform/omap/omap_hsmmc.0/by-name/boot|BLOCK=auto|g' AnyKernel3/anykernel.sh
-        sed -i 's/IS_SLOT_DEVICE=0;/IS_SLOT_DEVICE=auto;/g' AnyKernel3/anykernel.sh
-        cp android-kernel/out/arch/$ARCH/boot/$KERNEL_IMAGE AnyKernel3/
-        rm -rf AnyKernel3/.git AnyKernel3/README.md AnyKernel3/modules AnyKernel3/patch AnyKernel3/ramdisk AnyKernel3/.github
-        cd AnyKernel3
-        zip -r9 ../AnyKernel3-$BUILD_TIME.zip *
-    fi
-}
-
-bootimage() {
-    if [ $BUILD_BOOT_IMG = "true" ] && [ $BUILD_FILE_OK = "true" ]; then
-        cd $WORK
-        mkdir magiskboot && cd magiskboot
-        aria2c -o boot.img $BOOT_SOURCE
-        case $HOST_ARCH in
-            armv7* | armv8l | arm64 | armhf | arm) aria2c https://raw.githubusercontent.com/magojohnji/magiskboot-linux/main/arm64-v8a/magiskboot && chmod +x magiskboot ;;
-            i*86 | x86 | amd64 | x86_64) aria2c https://raw.githubusercontent.com/magojohnji/magiskboot-linux/main/x86_64/magiskboot && chmod +x magiskboot  ;;
-            *) echo "Unknow cpu architecture for this device !" && exit 1 ;;
-        esac
-        ./magiskboot unpack boot.img
-        cp $WORK/android-kernel/out/arch/$ARCH/boot/$KERNEL_IMAGE kernel
-        ./magiskboot repack boot.img && rm -rf boot.img && mv new-boot.img boot.img
-    fi
+    cd $WORK
+    git clone --depth=1 https://github.com/osm0sis/AnyKernel3 AnyKernel3
+    sed -i "s/kernel.string=ExampleKernel by osm0sis @ xda-developers/kernel.string=By Lin with ${BUILD_TIME}/g" AnyKernel3/anykernel.sh
+    sed -i 's/do.devicecheck=1/do.devicecheck=0/g' AnyKernel3/anykernel.sh
+    sed -i "s/device.name1=maguro/device.name1=${DEVICE}/g" AnyKernel3/anykernel.sh
+    sed -i 's/device.name2=toro/device.name2=/g' AnyKernel3/anykernel.sh
+    sed -i 's/device.name3=toroplus/device.name3=/g' AnyKernel3/anykernel.sh
+    sed -i 's/device.name4=tuna/device.name4=/g' AnyKernel3/anykernel.sh
+    sed -i 's|BLOCK=/dev/block/platform/omap/omap_hsmmc.0/by-name/boot|BLOCK=auto|g' AnyKernel3/anykernel.sh
+    sed -i 's/is_slot_device=0;/is_slot_device=auto;/g' AnyKernel3/anykernel.sh
+    cp android-kernel/out/arch/$ARCH/boot/$KERNEL_IMAGE AnyKernel3/
+    rm -rf AnyKernel3/.git AnyKernel3/README.md AnyKernel3/modules AnyKernel3/patch AnyKernel3/ramdisk AnyKernel3/.github
+    cd AnyKernel3
+    zip -r9 ../AnyKernel3-$BUILD_TIME.zip *
 }
 
 main() {
     if [ "$#" -eq 0 ]; then
-        steps=("install_tools" "download_clang_compiler" "download_appropriate_gcc" "set_path" "clone_kernel" "merge_kernel_configs" "setup_kernelsu" "lxc_kali" "apply_patches_and_configurations" "build_kernel" "package_anykernel3" "bootimage")
+        steps=("install_tools" "download_clang_compiler" "download_appropriate_gcc" "set_path" "clone_kernel" "merge_kernel_configs" "setup_kernelsu" "apply_patches_and_configurations" "build_kernel" "package_anykernel3")
     else
         steps=("$@")
     fi
@@ -371,15 +299,11 @@ main() {
                                               ;;
             setup_kernelsu )                  setup_kernelsu
                                               ;;
-            lxc_kali)                         lxc_kali
-                                              ;;
             apply_patches_and_configurations ) apply_patches_and_configurations
                                               ;;
             build_kernel )                    build_kernel
                                               ;;
             package_anykernel3 )              package_anykernel3
-                                              ;;
-            bootimage )                       bootimage
                                               ;;
             * )                               echo "Invalid option: $step"
                                               exit 1
