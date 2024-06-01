@@ -47,7 +47,7 @@ KERNELSU_TAG="main"
 KPROBES_CONFIG="true"
 OVERLAYFS_CONFIG="true"
 APPLY_KSU_PATCH="true"
-DISABLELTO="true"
+DISABLELTO="false"
 DISABLE_CC_WERROR="true"
 
 # 先画个大饼 不确定是否成功
