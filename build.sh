@@ -1,7 +1,7 @@
 #!/bin/bash
 
-set -e
-# set -e -x
+# set -e
+set -e -x
 
 # BUILD_TIME=$(TZ='Asia/Shanghai' date +'%Y%m%d-%H%M%S')
 
@@ -206,13 +206,13 @@ setup_kernelsu() {
 lxc_kali() {
     if [ $LXC = "true" ]; then
         cd $WORK/$KERNEL_DIR
-        aria2c https://github.com/Fyg369/lxc-docker/raw/main/LXC-DOCKER-OPEN-CONFIG.sh
-        echo "CONFIG_DOCKER=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
-        bash LXC-DOCKER-OPEN-CONFIG.sh $KERNEL_CONFIG -w
+        aria2c https://github.com/Fyg369/lxc-docker/raw/main/LXC-DOCKER-OPEN-CONFIG.sh && chmod +x LXC-DOCKER-OPEN-CONFIG.sh
+        # echo "CONFIG_DOCKER=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
+        ./LXC-DOCKER-OPEN-CONFIG.sh $KERNEL_CONFIG -w
     fi
     if [ $KALI_NETHUNTER = "true" ]; then
-        aria2c https://github.com/Biohazardousrom/Kali-defconfig-checker/raw/master/check-kernel-config
-        bash check-kernel-config $KERNEL_CONFIG -w
+        aria2c https://github.com/Biohazardousrom/Kali-defconfig-checker/raw/master/check-kernel-config && chmod +x check-kernel-config
+        ./check-kernel-config $KERNEL_CONFIG -w
     fi
 }
 
