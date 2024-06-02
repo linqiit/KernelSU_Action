@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# set -e -x
 set -eux
 
 # BUILD_TIME=$(TZ='Asia/Shanghai' date +'%Y%m%d-%H%M%S')
@@ -50,8 +49,10 @@ APPLY_KSU_PATCH="true"
 DISABLELTO="false"
 DISABLE_CC_WERROR="true"
 
-# 先画个大饼 实测报错 有需要自行研究吧 毁灭吧
 ENABLE_CCACHE="true"
+
+
+# 先画个大饼 实测报错 有需要自行研究吧 毁灭吧
 CONFIG_KVM="false"
 LXC="false"
 LXC_PATCH="false"
@@ -94,6 +95,24 @@ prepare_ccache() {
         ccache -M 2G
         ccache -s
     fi
+}
+
+get_system_info() {
+    echo "--------------------------CPU信息--------------------------"
+    echo "CPU物理数量: $(cat /proc/cpuinfo | grep 'physical id' | sort | uniq | wc -l)"
+    echo "CPU核心数量: $(nproc)"
+    echo -e "CPU型号信息:$(cat /proc/cpuinfo | grep -m1 'model name' | awk -F: '{print $2}')"
+    echo "CPU频率: $(cat /proc/cpuinfo | grep -m1 'cpu MHz' | awk -F: '{print $2}') MHz"
+    echo "缓存大小: $(cat /proc/cpuinfo | grep -m1 'cache size' | awk -F: '{print $2}')"
+    echo "CPU架构: $(lscpu | grep 'Architecture' | awk '{print $2}')"
+    echo "线程数: $(lscpu | grep '^Thread(s) per core:' | awk '{print $4}')"
+    echo "每核核心数: $(lscpu | grep '^Core(s) per socket:' | awk '{print $4}')"
+    echo "插槽数: $(lscpu | grep '^Socket(s):' | awk '{print $2}')"
+    echo "--------------------------内存信息--------------------------"
+    echo -e "$(sudo lshw -short -C memory | grep GiB)"
+    echo "--------------------------硬盘信息--------------------------"
+    echo "硬盘数量: $(ls /dev/sd* | grep -v [1-9] | wc -l)"
+    df -hT
 }
 
 install_tools() {
@@ -205,7 +224,6 @@ lxc_kali() {
     if [ $LXC = "true" ]; then
         cd $WORK/$KERNEL_DIR
         aria2c https://github.com/Fyg369/lxc-docker/raw/main/LXC-DOCKER-OPEN-CONFIG.sh && chmod +x LXC-DOCKER-OPEN-CONFIG.sh
-        # echo "CONFIG_DOCKER=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
         ./LXC-DOCKER-OPEN-CONFIG.sh arch/$ARCH/configs/$KERNEL_CONFIG -w
     fi
     if [ $KALI_NETHUNTER = "true" ]; then
@@ -263,6 +281,7 @@ apply_patches_and_configurations() {
     fi
 
     if [ $LXC_PATCH = "true" ]; then
+        # echo "CONFIG_DOCKER=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
         grep -q "CONFIG_ANDROID_PARANOID_NETWORK" arch/$ARCH/configs/$KERNEL_CONFIG && sed -i 's/CONFIG_ANDROID_PARANOID_NETWORK=y/# CONFIG_ANDROID_PARANOID_NETWORK is not set/' arch/$ARCH/configs/$KERNEL_CONFIG
         aria2c https://github.com/wu17481748/lxc-docker/raw/main/cgroup.patch
             patch $WORK/$KERNEL_DIR/kernel/cgroup.c < cgroup.patch
