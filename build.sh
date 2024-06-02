@@ -275,6 +275,17 @@ apply_patches_and_configurations() {
         echo "CONFIG_CC_WERROR=n" >> arch/$ARCH/configs/$KERNEL_CONFIG
     fi
 
+    if [ $APATCH = "true" ]; then
+        mkdir drivers/apatch
+        aria2c https://github.com/dabao1955/kernel_build_action/raw/main/apatch/Kconfig -o drivers/apatch/Kconfig
+        grep -q "apatch" || sed -i "/endmenu/i\\source \"drivers/apatch/Kconfig\"" drivers/Kconfig
+        # aria2c https://github.com/dabao1955/kernel_build_action/raw/main/apatch/module_fix.patch
+        # git apply module_fix.patch
+        echo "CONFIG_APATCH_SUPPORT=y" | tee -a arch/$ARCH/configs/$KERNEL_CONFIG >/dev/null
+        echo "CONFIG_APATCH_FIX_MODULES=y" | tee -a arch/$ARCH/configs/$KERNEL_CONFIG >/dev/null
+        echo "CONFIG_APATCH_CUSTOMS=y" | tee -a arch/$ARCH/configs/$KERNEL_CONFIG >/dev/null
+    fi
+
     if [ $CONFIG_KVM = "true" ]; then
         echo "CONFIG_VIRTUALIZATION=y" | tee -a arch/$ARCH/configs/$KERNEL_CONFIG >/dev/null
         echo "CONFIG_KVM=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
