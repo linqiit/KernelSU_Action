@@ -53,6 +53,7 @@ jobs:
         name: kernel-build
         path: |
           ${{ github.workspace }}/workspace/img/boot.img
+          ${{ github.workspace }}/workspace/apatch_tmp/boot.img
           ${{ github.workspace }}/workspace/android-kernel/out/arch/arm64/boot/Image.gz-dtb
           ${{ github.workspace }}/workspace/AnyKernel3-${{ env.BUILD_TIME }}.zip
 

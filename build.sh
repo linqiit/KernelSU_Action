@@ -357,11 +357,7 @@ package_anykernel3() {
     sed -i 's|BLOCK=/dev/block/platform/omap/omap_hsmmc.0/by-name/boot|BLOCK=auto|g' AnyKernel3/anykernel.sh
     sed -i 's/IS_SLOT_DEVICE=0;/IS_SLOT_DEVICE=auto;/g' AnyKernel3/anykernel.sh
     rm -rf AnyKernel3/.git AnyKernel3/README.md AnyKernel3/modules AnyKernel3/patch AnyKernel3/ramdisk AnyKernel3/.github
-    if [ $APATCH_BUILD = "true" ] && [ "$APATCH_SUCCESS" ="true"]; then
-        cp apatch/$KERNEL_IMAGE AnyKernel3/
-    else
-        cp $KERNEL_DIR/out/arch/$ARCH/boot/$KERNEL_IMAGE AnyKernel3/
-    fi
+    cp $KERNEL_DIR/out/arch/$ARCH/boot/$KERNEL_IMAGE AnyKernel3/
     cd AnyKernel3
     zip -r9 ../AnyKernel3-$BUILD_TIME.zip *
 
@@ -376,7 +372,7 @@ download_magiskboot() {
 }
 
 bootimage() {
-    if [ $BUILD_BOOT_IMG = "true" ] && [ $BUILD_FILE_OK = "true" ]; then
+    if [ $BUILD_BOOT_IMG = "true" ]; then
         cd $WORK
         mkdir img && cd img
         aria2c -o boot.img $BOOT_SOURCE
@@ -389,7 +385,7 @@ bootimage() {
 }
 
 apatch_o() {
-    if [ $APATCH_BUILD = "true" ] && [ $BUILD_FILE_OK = "true" ]; then
+    if [ $BUILD_BOOT_IMG = "true" ] && [ $APATCH_BUILD = "true" ]; then
         cd $WORK
         mkdir apatch_tmp && cd apatch_tmp
         aria2c -o kpimg https://github.com/bmax121/KernelPatch/releases/$KP_VERSION/download/kpimg-android
@@ -399,8 +395,10 @@ apatch_o() {
             *) echo "Unknow cpu architecture for this device !" && exit 1 ;;
         esac
         download_magiskboot
-        cp $WORK/$KERNEL_DIR/out/arch/$ARCH/boot/$KERNEL_IMAGE kernel
-        ./kptools -p -i kernel -k kpimg -s $KEY -o $KERNEL_IMAGE
+        cp $WORK/img/boot.img
+        ./magiskboot unpack boot.img && mv kernel kernel-b
+        ./kptools -p -i kernel-b -k kpimg -s $KEY -o kernel
+        ./magiskboot repack boot.img && rm -rf boot.img && mv new-boot.img boot.img
         if [ $? -eq 0 ]; then
             APATCH_SUCCESS="true"
         else
@@ -413,7 +411,7 @@ apatch_o() {
 
 main() {
     if [ "$#" -eq 0 ]; then
-        steps=("install_tools" "download_clang_compiler" "download_appropriate_gcc" "set_path" "clone_kernel" "merge_kernel_configs" "setup_kernelsu" "lxc_kali" "apply_patches_and_configurations" "build_kernel" "apatch_o" "bootimage" "package_anykernel3")
+        steps=("install_tools" "download_clang_compiler" "download_appropriate_gcc" "set_path" "clone_kernel" "merge_kernel_configs" "setup_kernelsu" "lxc_kali" "apply_patches_and_configurations" "build_kernel" "bootimage" "apatch_o" "package_anykernel3")
     else
         steps=("$@")
     fi
@@ -440,9 +438,9 @@ main() {
                                               ;;
             build_kernel )                    build_kernel
                                               ;;
-            apatch_o )                        apatch_o
-                                              ;;
             bootimage )                       bootimage
+                                              ;;
+            apatch_o )                        apatch_o
                                               ;;
             package_anykernel3 )              package_anykernel3
                                               ;;
