@@ -395,7 +395,7 @@ apatch_o() {
             *) echo "Unknow cpu architecture for this device !" && exit 1 ;;
         esac
         download_magiskboot
-        cp $WORK/img/boot.img
+        cp $WORK/img/boot.img .
         ./magiskboot unpack boot.img && mv kernel kernel-b
         ./kptools -p -i kernel-b -k kpimg -s $KEY -o kernel
         ./magiskboot repack boot.img && rm -rf boot.img && mv new-boot.img boot.img
