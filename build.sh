@@ -395,7 +395,7 @@ apatch_o() {
         aria2c -o kpimg https://github.com/bmax121/KernelPatch/releases/$KP_VERSION/download/kpimg-android
         case $HOST_ARCH in
             armv7* | armv8l | arm64 | armhf | arm) aria2c -o kptools https://github.com/bmax121/KernelPatch/releases/$KP_VERSION/download/kptools-android && chmod +x kptools ;;
-            i*86 | x86 | amd64 | x86_64) aria2c -o kptools https://github.com/bmax121/KernelPatch/releases/download/$KP_VERSION/kptools-linux && chmod +x kptools ;;
+            i*86 | x86 | amd64 | x86_64) aria2c -o kptools https://github.com/bmax121/KernelPatch/releases/$KP_VERSION/download/kptools-linux && chmod +x kptools ;;
             *) echo "Unknow cpu architecture for this device !" && exit 1 ;;
         esac
         download_magiskboot
