@@ -1,6 +1,7 @@
 #!/bin/bash
 
-set -eux
+set -eu
+# set -eux
 
 # BUILD_TIME=$(TZ='Asia/Shanghai' date +'%Y%m%d-%H%M%S')
 
@@ -17,7 +18,7 @@ ARCH="arm64"
 DEVICE="dipper"
 KERNEL_DIR="android-kernel"
 
-BUILD_BOOT_IMG="true"
+BUILD_BOOT_IMG="false"
 BOOT_SOURCE="https://raw.githubusercontent.com/linqiit/Filee/master/Boot/dipper-crDroid-13.0-boot.img"
 
 # Clang默认true启用谷歌 自定义暂时只支持tar.gz压缩包
@@ -55,7 +56,7 @@ APATCH_BUILD="true"
 KEY="Aa202406"
 KP_VERSION="latest"
 
-# 尝试画个大饼 实测报错 有需要自行研究吧 毁灭吧
+# 尝试画个大饼 实测报错 有需要自行研究吧 TNND毁灭吧
 CONFIG_KVM="false"
 LXC="false"
 LXC_PATCH="false"
@@ -338,7 +339,7 @@ build_kernel() {
     fi
     make -j$(nproc --all) CC="$CC" $args 2>&1 | tee -a $BUILD_LOG
     if [ -f out/arch/$ARCH/boot/$KERNEL_IMAGE ]; then
-        BUILD_FILE_OK="true"
+        BUILD_SUCCESS="true"
     else
         msg "Kernel output file is empty" error
         exit 1
@@ -372,7 +373,7 @@ download_magiskboot() {
 }
 
 bootimage() {
-    if [ $BUILD_BOOT_IMG = "true" ]; then
+    if [ $BUILD_BOOT_IMG = "true" ] && [ "$BUILD_SUCCESS" = "true"]; then
         cd $WORK
         mkdir img && cd img
         aria2c -o boot.img $BOOT_SOURCE
@@ -380,7 +381,10 @@ bootimage() {
         ./magiskboot unpack boot.img
         cp $WORK/$KERNEL_DIR/out/arch/$ARCH/boot/$KERNEL_IMAGE kernel
         ./magiskboot repack boot.img && rm -rf boot.img && mv new-boot.img boot.img
-
+    else
+        cd $WORK
+        mkdir img && cd img
+        aria2c -o boot.img $BOOT_SOURCE
     fi
 }
 
@@ -399,19 +403,12 @@ apatch_o() {
         ./magiskboot unpack boot.img && mv kernel kernel-b
         ./kptools -p -i kernel-b -k kpimg -s $KEY -o kernel
         ./magiskboot repack boot.img && rm -rf boot.img && mv new-boot.img boot.img
-        if [ $? -eq 0 ]; then
-            APATCH_SUCCESS="true"
-        else
-            # APATCH_SUCCESS="false"
-            # exit 1
-            return 1
-        fi
     fi
 }
 
 main() {
     if [ "$#" -eq 0 ]; then
-        steps=("install_tools" "download_clang_compiler" "download_appropriate_gcc" "set_path" "clone_kernel" "merge_kernel_configs" "setup_kernelsu" "lxc_kali" "apply_patches_and_configurations" "build_kernel" "bootimage" "apatch_o" "package_anykernel3")
+        steps=("install_tools" "download_clang_compiler" "download_appropriate_gcc" "set_path" "clone_kernel" "merge_kernel_configs" "setup_kernelsu" "lxc_kali" "apply_patches_and_configurations" "build_kernel" "package_anykernel3" "bootimage" "apatch_o")
     else
         steps=("$@")
     fi
@@ -438,11 +435,11 @@ main() {
                                               ;;
             build_kernel )                    build_kernel
                                               ;;
+            package_anykernel3 )              package_anykernel3
+                                              ;;
             bootimage )                       bootimage
                                               ;;
             apatch_o )                        apatch_o
-                                              ;;
-            package_anykernel3 )              package_anykernel3
                                               ;;
             * )                               echo "Invalid option: $step"
                                               exit 1
