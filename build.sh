@@ -1,7 +1,6 @@
 #!/bin/bash
 
-set -eu
-# set -eux
+set -eux
 
 # BUILD_TIME=$(TZ='Asia/Shanghai' date +'%Y%m%d-%H%M%S')
 
@@ -297,12 +296,25 @@ apply_patches_and_configurations() {
     fi
 
     if [ $LXC_PATCH = "true" ]; then
-        # echo "CONFIG_DOCKER=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
+        # rm -rf utils
+        # git clone https://github.com/tomxi1997/lxc-docker-support-for-android.git utils
+        # echo 'source "utils/Kconfig"' >> "Kconfig"
+        # chmod +x $WORK/$KERNEL_DIR/utils/runcpatch.sh
+        # if [ -f $WORK/$KERNEL_DIR/kernel/cgroup/cgroup.c ]; then
+        #     sh $WORK/$KERNEL_DIR/utils/runcpatch.sh $WORK/$KERNEL_DIR/kernel/cgroup/cgroup.c
+        # fi
+        # if [ -f $WORK/$KERNEL_DIR/kernel/cgroup.c ]; then
+        #     sh $WORK/$KERNEL_DIR/utils/runcpatch.sh $WORK/$KERNEL_DIR/kernel/cgroup.c
+        # fi
+        # if [ -f $WORK/$KERNEL_DIR/net/netfilter/xt_qtaguid.c ]; then
+        #     patch -p0 < $WORK/$KERNEL_DIR/utils/xt_qtaguid.patch
+        # fi
+        echo "CONFIG_DOCKER=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
         grep -q "CONFIG_ANDROID_PARANOID_NETWORK" arch/$ARCH/configs/$KERNEL_CONFIG && sed -i 's/CONFIG_ANDROID_PARANOID_NETWORK=y/# CONFIG_ANDROID_PARANOID_NETWORK is not set/' arch/$ARCH/configs/$KERNEL_CONFIG
         aria2c https://github.com/wu17481748/lxc-docker/raw/main/cgroup.patch
             patch $WORK/$KERNEL_DIR/kernel/cgroup.c < cgroup.patch
         # aria2c https://github.com/wu17481748/lxc-docker/raw/main/xt_qtaguid.patch
-            # patch -p0 < xt_qtaguid.patch
+        #     patch -p0 < xt_qtaguid.patch
     fi
 
     if [ $KALI_NETHUNTER_PATCH = "true" ]; then
