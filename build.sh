@@ -50,7 +50,10 @@ DISABLELTO="false"
 DISABLE_CC_WERROR="true"
 
 ENABLE_CCACHE="true"
-
+APATCH="true"
+APATCH_BUILD="true"
+KEY="Aa202406"
+KP_VERSION="latest"
 
 # 先画个大饼 实测报错 有需要自行研究吧 毁灭吧
 CONFIG_KVM="false"
@@ -116,6 +119,7 @@ get_system_info() {
 }
 
 install_tools() {
+    get_system_info
     sudo apt update && sudo apt -y install bc bison build-essential ccache curl flex g++-multilib gcc-multilib git gnupg gperf imagemagick libc6 lib32ncurses5-dev lib32readline-dev lib32z1-dev liblz4-tool libncurses5-dev libncurses5 libsdl1.2-dev libssl-dev libelf-dev libwxgtk3.0-gtk3-dev libxml2 libxml2-utils libncurses-dev lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev make unzip python-is-python3 aria2
 
     # sudo rm /bin/python && sudo ln -s /bin/python2.7 /bin/python
@@ -271,6 +275,17 @@ apply_patches_and_configurations() {
         echo "CONFIG_CC_WERROR=n" >> arch/$ARCH/configs/$KERNEL_CONFIG
     fi
 
+    if [ $APATCH = "true" ]; then
+        mkdir drivers/apatch
+        aria2c https://github.com/dabao1955/kernel_build_action/raw/main/apatch/Kconfig -o drivers/apatch/Kconfig
+        grep -q "apatch" || sed -i "/endmenu/i\\source \"drivers/apatch/Kconfig\"" drivers/Kconfig
+        # aria2c https://github.com/dabao1955/kernel_build_action/raw/main/apatch/module_fix.patch
+        # git apply module_fix.patch
+        echo "CONFIG_APATCH_SUPPORT=y" | tee -a arch/$ARCH/configs/$KERNEL_CONFIG >/dev/null
+        echo "CONFIG_APATCH_FIX_MODULES=y" | tee -a arch/$ARCH/configs/$KERNEL_CONFIG >/dev/null
+        echo "CONFIG_APATCH_CUSTOMS=y" | tee -a arch/$ARCH/configs/$KERNEL_CONFIG >/dev/null
+    fi
+
     if [ $CONFIG_KVM = "true" ]; then
         echo "CONFIG_VIRTUALIZATION=y" | tee -a arch/$ARCH/configs/$KERNEL_CONFIG >/dev/null
         echo "CONFIG_KVM=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
@@ -331,43 +346,74 @@ build_kernel() {
 }
 
 package_anykernel3() {
-    if [ $BUILD_FILE_OK = "true" ]; then
-        cd $WORK
-        git clone --depth=1 https://github.com/osm0sis/AnyKernel3 AnyKernel3
-        sed -i "s/kernel.string=ExampleKernel by osm0sis @ xda-developers/kernel.string=By Lin with ${BUILD_TIME}/g" AnyKernel3/anykernel.sh
-        sed -i 's/do.devicecheck=1/do.devicecheck=0/g' AnyKernel3/anykernel.sh
-        sed -i "s/device.name1=maguro/device.name1=${DEVICE}/g" AnyKernel3/anykernel.sh
-        sed -i 's/device.name2=toro/device.name2=/g' AnyKernel3/anykernel.sh
-        sed -i 's/device.name3=toroplus/device.name3=/g' AnyKernel3/anykernel.sh
-        sed -i 's/device.name4=tuna/device.name4=/g' AnyKernel3/anykernel.sh
-        sed -i 's|BLOCK=/dev/block/platform/omap/omap_hsmmc.0/by-name/boot|BLOCK=auto|g' AnyKernel3/anykernel.sh
-        sed -i 's/IS_SLOT_DEVICE=0;/IS_SLOT_DEVICE=auto;/g' AnyKernel3/anykernel.sh
-        cp android-kernel/out/arch/$ARCH/boot/$KERNEL_IMAGE AnyKernel3/
-        rm -rf AnyKernel3/.git AnyKernel3/README.md AnyKernel3/modules AnyKernel3/patch AnyKernel3/ramdisk AnyKernel3/.github
-        cd AnyKernel3
-        zip -r9 ../AnyKernel3-$BUILD_TIME.zip *
+    cd $WORK
+    git clone --depth=1 https://github.com/osm0sis/AnyKernel3 AnyKernel3
+    sed -i "s/kernel.string=ExampleKernel by osm0sis @ xda-developers/kernel.string=By Lin with ${BUILD_TIME}/g" AnyKernel3/anykernel.sh
+    sed -i 's/do.devicecheck=1/do.devicecheck=0/g' AnyKernel3/anykernel.sh
+    sed -i "s/device.name1=maguro/device.name1=${DEVICE}/g" AnyKernel3/anykernel.sh
+    sed -i 's/device.name2=toro/device.name2=/g' AnyKernel3/anykernel.sh
+    sed -i 's/device.name3=toroplus/device.name3=/g' AnyKernel3/anykernel.sh
+    sed -i 's/device.name4=tuna/device.name4=/g' AnyKernel3/anykernel.sh
+    sed -i 's|BLOCK=/dev/block/platform/omap/omap_hsmmc.0/by-name/boot|BLOCK=auto|g' AnyKernel3/anykernel.sh
+    sed -i 's/IS_SLOT_DEVICE=0;/IS_SLOT_DEVICE=auto;/g' AnyKernel3/anykernel.sh
+    rm -rf AnyKernel3/.git AnyKernel3/README.md AnyKernel3/modules AnyKernel3/patch AnyKernel3/ramdisk AnyKernel3/.github
+    if [ $APATCH_BUILD = "true" ] && [ "$APATCH_SUCCESS" ="true"]; then
+        cp apatch/$KERNEL_IMAGE AnyKernel3/
+    else
+        cp $KERNEL_DIR/out/arch/$ARCH/boot/$KERNEL_IMAGE AnyKernel3/
     fi
+    cd AnyKernel3
+    zip -r9 ../AnyKernel3-$BUILD_TIME.zip *
+
+}
+
+download_magiskboot() {
+    case $HOST_ARCH in
+        armv7* | armv8l | arm64 | armhf | arm) aria2c https://raw.githubusercontent.com/magojohnji/magiskboot-linux/main/arm64-v8a/magiskboot && chmod +x magiskboot ;;
+        i*86 | x86 | amd64 | x86_64) aria2c https://raw.githubusercontent.com/magojohnji/magiskboot-linux/main/x86_64/magiskboot && chmod +x magiskboot  ;;
+        *) echo "Unknow cpu architecture for this device !" && exit 1 ;;
+    esac
 }
 
 bootimage() {
     if [ $BUILD_BOOT_IMG = "true" ] && [ $BUILD_FILE_OK = "true" ]; then
         cd $WORK
-        mkdir magiskboot && cd magiskboot
+        mkdir img && cd img
         aria2c -o boot.img $BOOT_SOURCE
+        download_magiskboot
+        ./magiskboot unpack boot.img
+        cp $WORK/$KERNEL_DIR/out/arch/$ARCH/boot/$KERNEL_IMAGE kernel
+        ./magiskboot repack boot.img && rm -rf boot.img && mv new-boot.img boot.img
+
+    fi
+}
+
+apatch_o() {
+    if [ $APATCH_BUILD = "true" ] && [ $BUILD_FILE_OK = "true" ]; then
+        cd $WORK
+        mkdir apatch_tmp && cd apatch_tmp
+        aria2c -o kpimg https://github.com/bmax121/KernelPatch/releases/$KP_VERSION/download/kpimg-android
         case $HOST_ARCH in
-            armv7* | armv8l | arm64 | armhf | arm) aria2c https://raw.githubusercontent.com/magojohnji/magiskboot-linux/main/arm64-v8a/magiskboot && chmod +x magiskboot ;;
-            i*86 | x86 | amd64 | x86_64) aria2c https://raw.githubusercontent.com/magojohnji/magiskboot-linux/main/x86_64/magiskboot && chmod +x magiskboot  ;;
+            armv7* | armv8l | arm64 | armhf | arm) aria2c -o kptools https://github.com/bmax121/KernelPatch/releases/$KP_VERSION/download/kptools-android && chmod +x kptools ;;
+            i*86 | x86 | amd64 | x86_64) aria2c -o kptools https://github.com/bmax121/KernelPatch/releases/download/$KP_VERSION/kptools-linux && chmod +x kptools ;;
             *) echo "Unknow cpu architecture for this device !" && exit 1 ;;
         esac
-        ./magiskboot unpack boot.img
-        cp $WORK/android-kernel/out/arch/$ARCH/boot/$KERNEL_IMAGE kernel
-        ./magiskboot repack boot.img && rm -rf boot.img && mv new-boot.img boot.img
+        download_magiskboot
+        cp $WORK/$KERNEL_DIR/out/arch/$ARCH/boot/$KERNEL_IMAGE kernel
+        ./kptools -p -i kernel -k kpimg -s $KEY -o $KERNEL_IMAGE
+        if [ $? -eq 0 ]; then
+            APATCH_SUCCESS="true"
+        else
+            # APATCH_SUCCESS="false"
+            # exit 1
+            return 1
+        fi
     fi
 }
 
 main() {
     if [ "$#" -eq 0 ]; then
-        steps=("install_tools" "download_clang_compiler" "download_appropriate_gcc" "set_path" "clone_kernel" "merge_kernel_configs" "setup_kernelsu" "lxc_kali" "apply_patches_and_configurations" "build_kernel" "package_anykernel3" "bootimage")
+        steps=("install_tools" "download_clang_compiler" "download_appropriate_gcc" "set_path" "clone_kernel" "merge_kernel_configs" "setup_kernelsu" "lxc_kali" "apply_patches_and_configurations" "build_kernel" "apatch_o" "bootimage" "package_anykernel3")
     else
         steps=("$@")
     fi
@@ -394,9 +440,11 @@ main() {
                                               ;;
             build_kernel )                    build_kernel
                                               ;;
-            package_anykernel3 )              package_anykernel3
+            apatch_o )                        apatch_o
                                               ;;
             bootimage )                       bootimage
+                                              ;;
+            package_anykernel3 )              package_anykernel3
                                               ;;
             * )                               echo "Invalid option: $step"
                                               exit 1
