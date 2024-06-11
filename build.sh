@@ -385,7 +385,7 @@ download_magiskboot() {
 }
 
 bootimage() {
-    if [ $BUILD_BOOT_IMG = "true" ] && [ "$BUILD_SUCCESS" = "true"]; then
+    if [ $BUILD_BOOT_IMG = "true" ] && [ "$BUILD_SUCCESS" = "true" ]; then
         cd $WORK
         mkdir img && cd img
         aria2c -o boot.img $BOOT_SOURCE
