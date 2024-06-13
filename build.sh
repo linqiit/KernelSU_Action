@@ -392,7 +392,7 @@ bootimage() {
         download_magiskboot
         ./magiskboot unpack boot.img
         cp $WORK/$KERNEL_DIR/out/arch/$ARCH/boot/$KERNEL_IMAGE kernel
-        ./magiskboot repack boot.img && rm -rf boot.img && mv new-boot.img boot.img
+        ./magiskboot repacking boot.img && rm -rf boot.img && mv new-boot.img boot.img
     else
         cd $WORK
         mkdir img && cd img
@@ -412,9 +412,9 @@ apatch_o() {
         esac
         download_magiskboot
         cp $WORK/img/boot.img .
-        ./magiskboot unpack boot.img && mv kernel kernel-b
-        ./kptools -p -i kernel-b -k kpimg -s $KEY -o kernel
-        ./magiskboot repack boot.img && rm -rf boot.img && mv new-boot.img boot.img
+        ./magiskboot unpack boot.img && mv kernel kernel.ori
+        ./kptools -p -i kernel.ori -S $KEY -k kpimg -o kernel
+        ./magiskboot repacking boot.img && rm -rf boot.img && mv new-boot.img boot.img
     fi
 }
 
