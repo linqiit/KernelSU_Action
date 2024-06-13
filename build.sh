@@ -18,7 +18,7 @@ DEVICE="dipper"
 KERNEL_DIR="android-kernel"
 
 BUILD_BOOT_IMG="true"
-BOOT_SOURCE="https://raw.githubusercontent.com/linqiit/Filee/master/Boot/dipper-lineage-20.0-boot.img"
+BOOT_SOURCE="https://raw.githubusercontent.com/linqiit/Filee/master/Boot/dipper-crDroid-13.0-boot.img"
 
 # Clang默认true启用谷歌 自定义暂时只支持tar.gz压缩包
 CLANG_AOSP="false"
@@ -41,13 +41,13 @@ GCC_32_SOURCE="https://android.googlesource.com/platform/prebuilts/gcc/linux-x86
 GCC_32_BRANCH="gcc-master"
 GCC_ARM_DIR="$WORK/gcc-32/bin"
 
-KERNELSU="false"
+KERNELSU="true"
 KERNELSU_TAG="v0.9.5"
-KPROBES_CONFIG="false"
-OVERLAYFS_CONFIG="false"
-APPLY_KSU_PATCH="false"
+KPROBES_CONFIG="true"
+OVERLAYFS_CONFIG="true"
+APPLY_KSU_PATCH="true"
 DISABLELTO="false"
-DISABLE_CC_WERROR="false"
+DISABLE_CC_WERROR="true"
 
 ENABLE_CCACHE="true"
 APATCH="true"
@@ -392,7 +392,7 @@ bootimage() {
         download_magiskboot
         ./magiskboot unpack boot.img
         cp $WORK/$KERNEL_DIR/out/arch/$ARCH/boot/$KERNEL_IMAGE kernel
-        ./magiskboot repacking boot.img && rm -rf boot.img && mv new-boot.img boot.img
+        ./magiskboot repack boot.img && rm -rf boot.img && mv new-boot.img boot.img
     else
         cd $WORK
         mkdir img && cd img
@@ -412,9 +412,9 @@ apatch_o() {
         esac
         download_magiskboot
         cp $WORK/img/boot.img .
-        ./magiskboot unpack boot.img && mv kernel kernel.ori
-        ./kptools -p -i kernel.ori -S $KEY -k kpimg -o kernel
-        ./magiskboot repacking boot.img && rm -rf boot.img && mv new-boot.img boot.img
+        ./magiskboot unpack boot.img && mv kernel kernel-b
+        ./kptools -p -i kernel-b -k kpimg -s $KEY -o kernel
+        ./magiskboot repack boot.img && rm -rf boot.img && mv new-boot.img boot.img
     fi
 }
 
