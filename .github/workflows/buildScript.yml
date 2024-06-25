@@ -36,7 +36,7 @@ jobs:
       shell: bash
       run: |
         chmod +x build.sh
-        ./build.sh install_tools bootimage apatch_o
+        ./build.sh
       continue-on-error: true
       env:
         pwd: ${{ github.workspace }}
