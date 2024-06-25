@@ -17,7 +17,7 @@ ARCH="arm64"
 DEVICE="dipper"
 KERNEL_DIR="android-kernel"
 
-BUILD_BOOT_IMG="true"
+BUILD_BOOT_IMG="false"
 BOOT_SOURCE="https://raw.githubusercontent.com/linqiit/Filee/master/Boot/dipper-crDroid-13.0-boot.img"
 
 # Clang默认true启用谷歌 自定义暂时只支持tar.gz压缩包
@@ -41,18 +41,18 @@ GCC_32_SOURCE="https://android.googlesource.com/platform/prebuilts/gcc/linux-x86
 GCC_32_BRANCH="gcc-master"
 GCC_ARM_DIR="$WORK/gcc-32/bin"
 
-KERNELSU="true"
+KERNELSU="false"
 KERNELSU_TAG="v0.9.5"
-KPROBES_CONFIG="true"
-OVERLAYFS_CONFIG="true"
-APPLY_KSU_PATCH="true"
+KPROBES_CONFIG="false"
+OVERLAYFS_CONFIG="false"
+APPLY_KSU_PATCH="false"
 DISABLELTO="false"
-DISABLE_CC_WERROR="true"
+DISABLE_CC_WERROR="false"
 
 ENABLE_CCACHE="true"
-APATCH="true"
-APATCH_BUILD="true"
-KEY="Aa202406"
+APATCH="false"
+APATCH_BUILD="false"
+KEY="Aa$(date +%Y%m)"
 KP_VERSION="latest"
 
 # 尝试画个大饼 实测报错 有需要自行研究吧 TNND毁灭吧
