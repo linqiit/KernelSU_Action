@@ -48,7 +48,7 @@ jobs:
 
     - name: Upload build artifacts
       if: success()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: kernel-build
         path: |
@@ -59,7 +59,7 @@ jobs:
 
     - name: Upload Log on Failure
       if: failure()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: build-log
         path: ${{ github.workspace }}/workspace/android-kernel/build.log
