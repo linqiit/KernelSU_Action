@@ -276,7 +276,7 @@ apply_patches_and_configurations() {
     fi
 
     if [ $APATCH = "true" ]; then
-        mkdir drivers/apatch
+        mkdir -p drivers/apatch
         aria2c https://github.com/dabao1955/kernel_build_action/raw/main/apatch/Kconfig -o drivers/apatch/Kconfig
         grep -q "apatch" || sed -i "/endmenu/i\\source \"drivers/apatch/Kconfig\"" drivers/Kconfig
         # aria2c https://github.com/dabao1955/kernel_build_action/raw/main/apatch/module_fix.patch
