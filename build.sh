@@ -18,14 +18,14 @@ DEVICE="dipper"
 KERNEL_DIR="android-kernel"
 
 BUILD_BOOT_IMG="false"
-BOOT_SOURCE="https://raw.githubusercontent.com/linqiit/Filee/master/Boot/dipper-crDroid-13.0-boot.img"
+BOOT_SOURCE="https://mirrorbits.lineageos.org/full/dipper/20241109/boot.img"
 
 # Clang默认true启用谷歌 自定义暂时只支持tar.gz压缩包
 CLANG_AOSP="false"
 AOSP_BRANCH="main"
 AOSP_VERSION="r487747c"
-OTHER_CLANG="https://gitlab.com/LeCmnGend/clang.git"
-OTHER_BRANCH="clang-17"
+OTHER_CLANG="https://bitbucket.org/thexperienceproject/yuki-clang.git"
+OTHER_BRANCH="18.0.0"
 CLANG_BIN="$WORK/clang/bin"
 
 # Clang-AOSP：https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+refs
@@ -34,25 +34,26 @@ CLANG_BIN="$WORK/clang/bin"
 AARCH64="true"
 GCC_64_SOURCE="https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/+archive/refs/tags/android-12.1.0_r27.tar.gz"
 GCC_64_BRANCH="main"
-GCC_AARCH64_DIR="$WORK/gcc-64/bin"
+GCC_AARCH64_DIR="$WORK/aarch64-linux-gnu/bin"
 
 ARM="true"
 GCC_32_SOURCE="https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/+archive/refs/tags/android-12.1.0_r27.tar.gz"
 GCC_32_BRANCH="gcc-master"
-GCC_ARM_DIR="$WORK/gcc-32/bin"
+GCC_ARM_DIR="$WORK/arm-linux-gnueabi/bin"
 
-KERNELSU="false"
+KERNELSU="true"
 KERNELSU_TAG="v0.9.5"
-KPROBES_CONFIG="false"
-OVERLAYFS_CONFIG="false"
-APPLY_KSU_PATCH="false"
+KPROBES_CONFIG="true"
+OVERLAYFS_CONFIG="true"
+APPLY_KSU_PATCH="true"
 DISABLELTO="false"
-DISABLE_CC_WERROR="false"
+DISABLE_CC_WERROR="true"
 
 ENABLE_CCACHE="true"
+
 APATCH="false"
 APATCH_BUILD="false"
-KEY="Aa$(date +%Y%m)"
+KEY="Aa202406"
 KP_VERSION="latest"
 
 # 尝试画个大饼 实测报错 有需要自行研究吧 TNND毁灭吧
@@ -65,8 +66,11 @@ KALI_NETHUNTER_PATCH="false"
 args="O=out \
 ARCH=arm64 \
 CLANG_TRIPLE=aarch64-linux-gnu- \
-CROSS_COMPILE=aarch64-linux-android- \
+CROSS_COMPILE=aarch64-linux-gnu- \
 CROSS_COMPILE_ARM32=arm-linux-androideabi- \
+LD=ld.lld \
+NM=llvm-nm \
+AR=llvm-ar \
 LLVM=1 \
 LLVM_IAS=1"
 # C="AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip LLVM_IAS=1 LLVM=1 LD=ld.lld"
@@ -276,11 +280,6 @@ apply_patches_and_configurations() {
     fi
 
     if [ $APATCH = "true" ]; then
-        mkdir -p drivers/apatch
-        aria2c https://github.com/dabao1955/kernel_build_action/raw/main/apatch/Kconfig -o drivers/apatch/Kconfig
-        grep -q "apatch" || sed -i "/endmenu/i\\source \"drivers/apatch/Kconfig\"" drivers/Kconfig
-        # aria2c https://github.com/dabao1955/kernel_build_action/raw/main/apatch/module_fix.patch
-        # git apply module_fix.patch
         echo "CONFIG_APATCH_SUPPORT=y" | tee -a arch/$ARCH/configs/$KERNEL_CONFIG >/dev/null
         echo "CONFIG_APATCH_FIX_MODULES=y" | tee -a arch/$ARCH/configs/$KERNEL_CONFIG >/dev/null
         echo "CONFIG_APATCH_CUSTOMS=y" | tee -a arch/$ARCH/configs/$KERNEL_CONFIG >/dev/null
@@ -412,8 +411,8 @@ apatch_o() {
         esac
         download_magiskboot
         cp $WORK/img/boot.img .
-        ./magiskboot unpack boot.img && mv kernel kernel-b
-        ./kptools -p -i kernel-b -k kpimg -s $KEY -o kernel
+        ./magiskboot unpack boot.img
+        ./kptools -p -k kpimg -s "${KEY}" -i kernel -o kernel
         ./magiskboot repack boot.img && rm -rf boot.img && mv new-boot.img boot.img
     fi
 }
