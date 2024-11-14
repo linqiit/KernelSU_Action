@@ -68,9 +68,6 @@ ARCH=arm64 \
 CLANG_TRIPLE=aarch64-linux-gnu- \
 CROSS_COMPILE=aarch64-linux-gnu- \
 CROSS_COMPILE_ARM32=arm-linux-androideabi- \
-LD=ld.lld \
-NM=llvm-nm \
-AR=llvm-ar \
 LLVM=1 \
 LLVM_IAS=1"
 # C="AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip LLVM_IAS=1 LLVM=1 LD=ld.lld"
