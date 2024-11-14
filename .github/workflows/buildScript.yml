@@ -38,8 +38,13 @@ jobs:
         chmod +x build.sh
         ./build.sh
       continue-on-error: true
-      env:
-        pwd: ${{ github.workspace }}
+
+    - name: Upload Log on Failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-log
+        path: ${{ github.workspace }}/workspace/android-kernel/build.log
 
     - name: Check ccache stats after build
       run: |
@@ -56,10 +61,3 @@ jobs:
           ${{ github.workspace }}/workspace/apatch_tmp/boot.img
           ${{ github.workspace }}/workspace/android-kernel/out/arch/arm64/boot/Image.gz-dtb
           ${{ github.workspace }}/workspace/AnyKernel3-${{ env.BUILD_TIME }}.zip
-
-    - name: Upload Log on Failure
-      if: failure()
-      uses: actions/upload-artifact@v4
-      with:
-        name: build-log
-        path: ${{ github.workspace }}/workspace/android-kernel/build.log

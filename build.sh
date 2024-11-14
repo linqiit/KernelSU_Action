@@ -1,13 +1,13 @@
 #!/bin/bash
 
-set -eux
+set -eu
+# set -eux
 
 # BUILD_TIME=$(TZ='Asia/Shanghai' date +'%Y%m%d-%H%M%S')
 
 export WORK="$(pwd)/workspace"
 export HOST_ARCH=$(dpkg --print-architecture)
 
-# 内核仓库分支及其他配置
 KERNEL_SOURCE="https://github.com/LineageOS/android_kernel_xiaomi_sdm845"
 KERNEL_BRANCH="lineage-21"
 KERNEL_CONFIG="sdm845_defconfig"
@@ -20,7 +20,6 @@ KERNEL_DIR="android-kernel"
 BUILD_BOOT_IMG="false"
 BOOT_SOURCE="https://mirrorbits.lineageos.org/full/dipper/20241109/boot.img"
 
-# Clang默认true启用谷歌 自定义暂时只支持tar.gz压缩包
 CLANG_AOSP="false"
 AOSP_BRANCH="main"
 AOSP_VERSION="r487747c"
@@ -41,27 +40,15 @@ GCC_32_SOURCE="https://android.googlesource.com/platform/prebuilts/gcc/linux-x86
 GCC_32_BRANCH="gcc-master"
 GCC_ARM_DIR="$WORK/gcc-32/bin"
 
-KERNELSU="false"
+KERNELSU="true"
 KERNELSU_TAG="v0.9.5"
-KPROBES_CONFIG="false"
-OVERLAYFS_CONFIG="false"
-APPLY_KSU_PATCH="false"
-DISABLELTO="false"
-DISABLE_CC_WERROR="false"
+APPLY_KSU_PATCH="true"
+OVERLAYFS_CONFIG="true"
+KPROBES_CONFIG="true"
+DISABLELTO="true"             # 禁用优化
+DISABLE_CC_WERROR="true"    # 防止警告当作错误处理
 
 ENABLE_CCACHE="false"
-
-APATCH="false"
-APATCH_BUILD="false"
-KEY="Aa202406"
-KP_VERSION="latest"
-
-# 尝试画个大饼 实测报错 有需要自行研究吧 TNND毁灭吧
-CONFIG_KVM="false"
-LXC="true"
-LXC_PATCH="false"
-KALI_NETHUNTER="false"
-KALI_NETHUNTER_PATCH="false"
 
 args="O=out \
 ARCH=arm64 \
@@ -78,6 +65,9 @@ CROSS_COMPILE_ARM32=arm-linux-androideabi-
 # C="AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip LLVM_IAS=1 LLVM=1 LD=ld.lld"
 
 BUILD_LOG="$WORK/$KERNEL_DIR/build.log"
+
+LXC="true"      # 测试
+CONFIG_KVM="true"
 
 msg() {
   local message="$1"
@@ -230,14 +220,25 @@ setup_kernelsu() {
     fi
 }
 
-lxc_kali() {
+lxc_docker() {
     if [ $LXC = "true" ]; then
         cd $WORK/$KERNEL_DIR
         aria2c https://github.com/dabao1955/kernel_build_action/raw/main/lxc/config.sh && bash config.sh arch/$ARCH/configs/$KERNEL_CONFIG -w
+        echo "CONFIG_DOCKER=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
+        grep -q "CONFIG_ANDROID_PARANOID_NETWORK" arch/$ARCH/configs/$KERNEL_CONFIG && sed -i 's/CONFIG_ANDROID_PARANOID_NETWORK=y/# CONFIG_ANDROID_PARANOID_NETWORK is not set/' arch/$ARCH/configs/$KERNEL_CONFIG
+        aria2c https://github.com/dabao1955/kernel_build_action/raw/main/lxc/cgroup.patch
+        patch kernel/cgroup.c < cgroup.patch
+        patch $WORK/$KERNEL_DIR/kernel/cgroup.c < cgroup.patch
+        # aria2c https://github.com/dabao1955/kernel_build_action/raw/main/lxc/xt_qtaguid.patch
+        # patch net/netfilter/xt_qtaguid.c < xt_qtaguid.patch
     fi
-    if [ $KALI_NETHUNTER = "true" ]; then
-        aria2c https://github.com/Biohazardousrom/Kali-defconfig-checker/raw/master/check-kernel-config && chmod +x check-kernel-config
-        ./check-kernel-config arch/$ARCH/configs/$KERNEL_CONFIG -w
+    if [ $CONFIG_KVM = "true" ]; then
+        echo "CONFIG_VIRTUALIZATION=y" | tee -a arch/$ARCH/configs/$KERNEL_CONFIG >/dev/null
+        echo "CONFIG_KVM=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
+        # echo "CONFIG_KVM_MMIO=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
+        # echo "CONFIG_KVM_ARM_HOST=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
+        echo "CONFIG_VHOST_NET=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
+        echo "CONFIG_VHOST_CROSS_ENDIAN_LEGACY=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
     fi
 }
 
@@ -278,51 +279,6 @@ apply_patches_and_configurations() {
 
     if [ $DISABLE_CC_WERROR = "true" ]; then
         echo "CONFIG_CC_WERROR=n" >> arch/$ARCH/configs/$KERNEL_CONFIG
-    fi
-
-    if [ $APATCH = "true" ]; then
-        echo "CONFIG_APATCH_SUPPORT=y" | tee -a arch/$ARCH/configs/$KERNEL_CONFIG >/dev/null
-        echo "CONFIG_APATCH_FIX_MODULES=y" | tee -a arch/$ARCH/configs/$KERNEL_CONFIG >/dev/null
-        echo "CONFIG_APATCH_CUSTOMS=y" | tee -a arch/$ARCH/configs/$KERNEL_CONFIG >/dev/null
-    fi
-
-    if [ $CONFIG_KVM = "true" ]; then
-        echo "CONFIG_VIRTUALIZATION=y" | tee -a arch/$ARCH/configs/$KERNEL_CONFIG >/dev/null
-        echo "CONFIG_KVM=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
-        # echo "CONFIG_KVM_MMIO=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
-        # echo "CONFIG_KVM_ARM_HOST=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
-        echo "CONFIG_VHOST_NET=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
-        echo "CONFIG_VHOST_CROSS_ENDIAN_LEGACY=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
-    fi
-
-    if [ $LXC_PATCH = "true" ]; then
-        # rm -rf utils
-        # git clone https://github.com/tomxi1997/lxc-docker-support-for-android.git utils
-        # echo 'source "utils/Kconfig"' >> "Kconfig"
-        # chmod +x $WORK/$KERNEL_DIR/utils/runcpatch.sh
-        # if [ -f $WORK/$KERNEL_DIR/kernel/cgroup/cgroup.c ]; then
-        #     sh $WORK/$KERNEL_DIR/utils/runcpatch.sh $WORK/$KERNEL_DIR/kernel/cgroup/cgroup.c
-        # fi
-        # if [ -f $WORK/$KERNEL_DIR/kernel/cgroup.c ]; then
-        #     sh $WORK/$KERNEL_DIR/utils/runcpatch.sh $WORK/$KERNEL_DIR/kernel/cgroup.c
-        # fi
-        # if [ -f $WORK/$KERNEL_DIR/net/netfilter/xt_qtaguid.c ]; then
-        #     patch -p0 < $WORK/$KERNEL_DIR/utils/xt_qtaguid.patch
-        # fi
-        echo "CONFIG_DOCKER=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
-        grep -q "CONFIG_ANDROID_PARANOID_NETWORK" arch/$ARCH/configs/$KERNEL_CONFIG && sed -i 's/CONFIG_ANDROID_PARANOID_NETWORK=y/# CONFIG_ANDROID_PARANOID_NETWORK is not set/' arch/$ARCH/configs/$KERNEL_CONFIG
-        # aria2c https://github.com/dabao1955/kernel_build_action/raw/main/lxc/xt_qtaguid.patch
-        aria2c https://github.com/dabao1955/kernel_build_action/raw/main/lxc/cgroup.patch
-        patch kernel/cgroup.c < cgroup.patch
-        # patch $WORK/$KERNEL_DIR/kernel/cgroup.c < cgroup.patch
-        # patch net/netfilter/xt_qtaguid.c < xt_qtaguid.patch
-    fi
-
-    if [ $KALI_NETHUNTER_PATCH = "true" ]; then
-        git clone https://gitlab.com/kalilinux/nethunter/build-scripts/kali-nethunter-kernel.git
-        patch -p1 < kali-nethunter-kernel/patches/4.14/add-rtl88xxau-5.6.4.2-drivers.patch
-        patch -p1 < kali-nethunter-kernel/patches/4.14/add-wifi-injection-4.14.patch
-        patch -p1 < kali-nethunter-kernel/patches/4.14/fix-ath9k-naming-conflict.patch
     fi
 }
 
@@ -394,71 +350,61 @@ bootimage() {
         ./magiskboot unpack boot.img
         cp $WORK/$KERNEL_DIR/out/arch/$ARCH/boot/$KERNEL_IMAGE kernel
         ./magiskboot repack boot.img && rm -rf boot.img && mv new-boot.img boot.img
-    else
-        cd $WORK
-        mkdir img && cd img
-        aria2c -o boot.img $BOOT_SOURCE
-    fi
-}
-
-apatch_o() {
-    if [ $BUILD_BOOT_IMG = "true" ] && [ $APATCH_BUILD = "true" ]; then
-        cd $WORK
-        mkdir apatch_tmp && cd apatch_tmp
-        aria2c -o kpimg https://github.com/bmax121/KernelPatch/releases/$KP_VERSION/download/kpimg-android
-        case $HOST_ARCH in
-            armv7* | armv8l | arm64 | armhf | arm) aria2c -o kptools https://github.com/bmax121/KernelPatch/releases/$KP_VERSION/download/kptools-android && chmod +x kptools ;;
-            i*86 | x86 | amd64 | x86_64) aria2c -o kptools https://github.com/bmax121/KernelPatch/releases/$KP_VERSION/download/kptools-linux && chmod +x kptools ;;
-            *) echo "Unknow cpu architecture for this device !" && exit 1 ;;
-        esac
-        download_magiskboot
-        cp $WORK/img/boot.img .
-        ./magiskboot unpack boot.img
-        ./kptools -p -k kpimg -s "${KEY}" -i kernel -o kernel
-        ./magiskboot repack boot.img && rm -rf boot.img && mv new-boot.img boot.img
     fi
 }
 
 main() {
     if [ "$#" -eq 0 ]; then
-        steps=("install_tools" "download_clang_compiler" "download_appropriate_gcc" "set_path" "clone_kernel" "merge_kernel_configs" "setup_kernelsu" "lxc_kali" "apply_patches_and_configurations" "build_kernel" "package_anykernel3" "bootimage" "apatch_o")
+        steps=("install_tools" "download_clang_compiler" "download_appropriate_gcc" "set_path" "clone_kernel" "merge_kernel_configs" "setup_kernelsu" "lxc_docker" "apply_patches_and_configurations" "build_kernel" "package_anykernel3" "bootimage")
     else
         steps=("$@")
     fi
 
     for step in "${steps[@]}"; do
         case $step in
-            install_tools )                   install_tools
-                                              ;;
-            download_clang_compiler )         download_clang_compiler
-                                              ;;
-            download_appropriate_gcc )        download_appropriate_gcc
-                                              ;;
-            set_path )                        set_path
-                                              ;;
-            clone_kernel )                    clone_kernel
-                                              ;;
-            merge_kernel_configs )            merge_kernel_configs
-                                              ;;
-            setup_kernelsu )                  setup_kernelsu
-                                              ;;
-            lxc_kali)                         lxc_kali
-                                              ;;
-            apply_patches_and_configurations ) apply_patches_and_configurations
-                                              ;;
-            build_kernel )                    build_kernel
-                                              ;;
-            package_anykernel3 )              package_anykernel3
-                                              ;;
-            bootimage )                       bootimage
-                                              ;;
-            apatch_o )                        apatch_o
-                                              ;;
-            * )                               echo "Invalid option: $step"
-                                              exit 1
-                                              ;;
+            i )
+                install_tools
+                ;;
+            clang )
+                download_clang_compiler
+                ;;
+            gcc )
+                download_appropriate_gcc
+                ;;
+            path )
+                set_path
+                ;;
+            kernel )
+                clone_kernel
+                ;;
+            v )
+                merge_kernel_configs
+                ;;
+            kernelsu )
+                setup_kernelsu
+                ;;
+            lxc )
+                lxc_docker
+                ;;
+            patch )
+                apply_patches_and_configurations
+                ;;
+            build )
+                build_kernel
+                ;;
+            anykernel3 )
+                package_anykernel3
+                ;;
+            image )
+                bootimage
+                ;;
+            * )
+                echo "Invalid option: $step"
+                exit 1
+                ;;
         esac
     done
 }
 
 main "$@"
+
