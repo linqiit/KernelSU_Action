@@ -1,7 +1,6 @@
 #!/bin/bash
 
-set -eu
-# set -eux
+set -eux
 
 # BUILD_TIME=$(TZ='Asia/Shanghai' date +'%Y%m%d-%H%M%S')
 
