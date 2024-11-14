@@ -362,40 +362,40 @@ main() {
 
     for step in "${steps[@]}"; do
         case $step in
-            i )
+            install_tools|i )
                 install_tools
                 ;;
-            clang )
+            download_clang_compiler|clang )
                 download_clang_compiler
                 ;;
-            gcc )
+            download_appropriate_gcc|gcc )
                 download_appropriate_gcc
                 ;;
-            path )
+            set_path|path )
                 set_path
                 ;;
-            kernel )
+            clone_kernel|kernel )
                 clone_kernel
                 ;;
-            v )
+            merge_kernel_configs|c )
                 merge_kernel_configs
                 ;;
-            kernelsu )
+            setup_kernelsu|kernelsu )
                 setup_kernelsu
                 ;;
-            lxc )
+            lxc_docker|lxc )
                 lxc_docker
                 ;;
-            patch )
+            apply_patches_and_configurations|patch )
                 apply_patches_and_configurations
                 ;;
-            build )
+            build_kernel|build )
                 build_kernel
                 ;;
-            anykernel3 )
+            package_anykernel3|anykernel3 )
                 package_anykernel3
                 ;;
-            image )
+            bootimage|image )
                 bootimage
                 ;;
             * )
@@ -407,4 +407,3 @@ main() {
 }
 
 main "$@"
-
