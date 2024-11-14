@@ -33,14 +33,15 @@ jobs:
         ccache -s
 
     - name: Run build script
+      id: build
       shell: bash
       run: |
         chmod +x build.sh
         ./build.sh
       continue-on-error: true
-
+    
     - name: Upload Log on Failure
-      if: failure()
+      if: steps.build.outcome == 'failure'
       uses: actions/upload-artifact@v4
       with:
         name: build-log
