@@ -65,9 +65,6 @@ CROSS_COMPILE_ARM32=arm-linux-androideabi-
 
 BUILD_LOG="$WORK/$KERNEL_DIR/build.log"
 
-LXC="true"      # 测试
-CONFIG_KVM="true"
-
 msg() {
   local message="$1"
   local message_type="${2:-}"
@@ -226,7 +223,6 @@ lxc_docker() {
         echo "CONFIG_DOCKER=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
         grep -q "CONFIG_ANDROID_PARANOID_NETWORK" arch/$ARCH/configs/$KERNEL_CONFIG && sed -i 's/CONFIG_ANDROID_PARANOID_NETWORK=y/# CONFIG_ANDROID_PARANOID_NETWORK is not set/' arch/$ARCH/configs/$KERNEL_CONFIG
         aria2c https://github.com/dabao1955/kernel_build_action/raw/main/lxc/cgroup.patch
-        # patch kernel/cgroup.c < cgroup.patch
         patch $WORK/$KERNEL_DIR/kernel/cgroup.c < cgroup.patch && rm -f cgroup.path
         # patch -p0 < cgroup.patch
         # aria2c https://github.com/dabao1955/kernel_build_action/raw/main/lxc/xt_qtaguid.patch
@@ -355,7 +351,7 @@ bootimage() {
 
 main() {
     if [ "$#" -eq 0 ]; then
-        steps=("install_tools" "download_clang_compiler" "download_appropriate_gcc" "set_path" "clone_kernel" "merge_kernel_configs" "setup_kernelsu" "apply_patches_and_configurations" "lxc_docker" "build_kernel" "package_anykernel3" "bootimage")
+        steps=("install_tools" "download_clang_compiler" "download_appropriate_gcc" "set_path" "clone_kernel" "merge_kernel_configs" "setup_kernelsu" "apply_patches_and_configurations" "build_kernel" "package_anykernel3" "bootimage")
     else
         steps=("$@")
     fi
@@ -385,9 +381,6 @@ main() {
                 ;;
             apply_patches_and_configurations|patch )
                 apply_patches_and_configurations
-                ;;
-            lxc_docker|lxc )
-                lxc_docker
                 ;;
             build_kernel|build )
                 build_kernel
