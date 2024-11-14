@@ -65,9 +65,6 @@ KALI_NETHUNTER_PATCH="false"
 
 args="O=out \
 ARCH=arm64 \
-LD=ld.lld \
-NM=llvm-nm \
-AR=llvm-ar \
 LLVM=1 \
 LLVM_IAS=1 \
 CLANG_TRIPLE=aarch64-linux-gnu- \
