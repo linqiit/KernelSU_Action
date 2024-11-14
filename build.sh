@@ -25,7 +25,7 @@ CLANG_AOSP="false"
 AOSP_BRANCH="main"
 AOSP_VERSION="r487747c"
 OTHER_CLANG="https://gitlab.com/LeCmnGend/clang.git"
-OTHER_BRANCH="clang-16"
+OTHER_BRANCH="clang-19"
 CLANG_BIN="$WORK/clang/bin"
 
 # Clang-AOSP：https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+refs
@@ -39,7 +39,7 @@ GCC_AARCH64_DIR="$WORK/clang/aarch64-linux-gnu/bin"
 ARM="true"
 GCC_32_SOURCE="https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/+archive/refs/tags/android-12.1.0_r27.tar.gz"
 GCC_32_BRANCH="gcc-master"
-GCC_ARM_DIR="$WORK/clang/arm-linux-gnueabi/bin"
+GCC_ARM_DIR="$WORK/gcc-32/bin"
 
 KERNELSU="false"
 KERNELSU_TAG="v0.9.5"
