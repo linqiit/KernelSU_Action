@@ -313,7 +313,7 @@ apply_patches_and_configurations() {
         grep -q "CONFIG_ANDROID_PARANOID_NETWORK" arch/$ARCH/configs/$KERNEL_CONFIG && sed -i 's/CONFIG_ANDROID_PARANOID_NETWORK=y/# CONFIG_ANDROID_PARANOID_NETWORK is not set/' arch/$ARCH/configs/$KERNEL_CONFIG
         # aria2c https://github.com/dabao1955/kernel_build_action/raw/main/lxc/xt_qtaguid.patch
         aria2c https://github.com/dabao1955/kernel_build_action/raw/main/lxc/cgroup.patch
-        patch kernel/cgroup/cgroup.c < cgroup.patch
+        patch kernel/cgroup.c < cgroup.patch
         # patch $WORK/$KERNEL_DIR/kernel/cgroup.c < cgroup.patch
         # patch net/netfilter/xt_qtaguid.c < xt_qtaguid.patch
     fi
