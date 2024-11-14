@@ -65,11 +65,16 @@ KALI_NETHUNTER_PATCH="false"
 
 args="O=out \
 ARCH=arm64 \
+LD=ld.lld \
+NM=llvm-nm \
+AR=llvm-ar \
+LLVM=1 \
+LLVM_IAS=1 \
 CLANG_TRIPLE=aarch64-linux-gnu- \
 CROSS_COMPILE=aarch64-linux-gnu- \
-CROSS_COMPILE_ARM32=arm-linux-androideabi- \
-LLVM=1 \
-LLVM_IAS=1"
+CROSS_COMPILE_ARM32=arm-linux-androideabi- 
+"
+
 # C="AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip LLVM_IAS=1 LLVM=1 LD=ld.lld"
 
 BUILD_LOG="$WORK/$KERNEL_DIR/build.log"
@@ -345,7 +350,7 @@ build_kernel() {
     else
         CC="clang"
     fi
-    make -j$(nproc --all) CC="$CC" $args 2>&1 | tee -a $BUILD_LOG
+    make -j$(nproc --all) CC="$CC" $args $KERNEL_CONFIG 2>&1 | tee -a $BUILD_LOG
     if [ -f out/arch/$ARCH/boot/$KERNEL_IMAGE ]; then
         BUILD_SUCCESS="true"
     else
