@@ -25,7 +25,7 @@ CLANG_AOSP="false"
 AOSP_BRANCH="main"
 AOSP_VERSION="r487747c"
 OTHER_CLANG="https://gitlab.com/LeCmnGend/clang.git"
-OTHER_BRANCH="clang-19"
+OTHER_BRANCH="clang-16"
 CLANG_BIN="$WORK/clang/bin"
 
 # Clang-AOSP：https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+refs
