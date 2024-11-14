@@ -25,7 +25,7 @@ CLANG_AOSP="false"
 AOSP_BRANCH="main"
 AOSP_VERSION="r487747c"
 OTHER_CLANG="https://gitlab.com/LeCmnGend/clang.git"
-OTHER_BRANCH="clang-16"
+OTHER_BRANCH="clang-19"
 CLANG_BIN="$WORK/clang/bin"
 
 # Clang-AOSP：https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+refs
@@ -233,8 +233,7 @@ setup_kernelsu() {
 lxc_kali() {
     if [ $LXC = "true" ]; then
         cd $WORK/$KERNEL_DIR
-        aria2c https://github.com/Fyg369/lxc-docker/raw/main/LXC-DOCKER-OPEN-CONFIG.sh && chmod +x LXC-DOCKER-OPEN-CONFIG.sh
-        ./LXC-DOCKER-OPEN-CONFIG.sh arch/$ARCH/configs/$KERNEL_CONFIG -w
+        aria2c https://github.com/dabao1955/kernel_build_action/raw/main/lxc/config.sh && bash config.sh arch/$ARCH/configs/$KERNEL_CONFIG -w
     fi
     if [ $KALI_NETHUNTER = "true" ]; then
         aria2c https://github.com/Biohazardousrom/Kali-defconfig-checker/raw/master/check-kernel-config && chmod +x check-kernel-config
@@ -312,10 +311,11 @@ apply_patches_and_configurations() {
         # fi
         echo "CONFIG_DOCKER=y" >> arch/$ARCH/configs/$KERNEL_CONFIG
         grep -q "CONFIG_ANDROID_PARANOID_NETWORK" arch/$ARCH/configs/$KERNEL_CONFIG && sed -i 's/CONFIG_ANDROID_PARANOID_NETWORK=y/# CONFIG_ANDROID_PARANOID_NETWORK is not set/' arch/$ARCH/configs/$KERNEL_CONFIG
-        aria2c https://github.com/wu17481748/lxc-docker/raw/main/cgroup.patch
-            patch $WORK/$KERNEL_DIR/kernel/cgroup.c < cgroup.patch
-        # aria2c https://github.com/wu17481748/lxc-docker/raw/main/xt_qtaguid.patch
-        #     patch -p0 < xt_qtaguid.patch
+        # aria2c https://github.com/dabao1955/kernel_build_action/raw/main/lxc/xt_qtaguid.patch
+        aria2c https://github.com/dabao1955/kernel_build_action/raw/main/lxc/cgroup.patch
+        patch kernel/cgroup/cgroup.c < cgroup.patch
+        # patch $WORK/$KERNEL_DIR/kernel/cgroup.c < cgroup.patch
+        # patch net/netfilter/xt_qtaguid.c < xt_qtaguid.patch
     fi
 
     if [ $KALI_NETHUNTER_PATCH = "true" ]; then
