@@ -41,13 +41,13 @@ GCC_32_SOURCE="https://android.googlesource.com/platform/prebuilts/gcc/linux-x86
 GCC_32_BRANCH="gcc-master"
 GCC_ARM_DIR="$WORK/clang/arm-linux-gnueabi/bin"
 
-KERNELSU="true"
+KERNELSU="false"
 KERNELSU_TAG="v0.9.5"
-KPROBES_CONFIG="true"
+KPROBES_CONFIG="false"
 OVERLAYFS_CONFIG="false"
-APPLY_KSU_PATCH="true"
+APPLY_KSU_PATCH="false"
 DISABLELTO="false"
-DISABLE_CC_WERROR="true"
+DISABLE_CC_WERROR="false"
 
 ENABLE_CCACHE="false"
 
