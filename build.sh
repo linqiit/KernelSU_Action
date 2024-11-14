@@ -8,9 +8,9 @@ export WORK="$(pwd)/workspace"
 export HOST_ARCH=$(dpkg --print-architecture)
 
 # 内核仓库分支及其他配置
-KERNEL_SOURCE="https://github.com/PainKiller3/kernel_xiaomi_sdm845"
-KERNEL_BRANCH="thirteen"
-KERNEL_CONFIG="vendor/xiaomi/silvercore_defconfig"
+KERNEL_SOURCE="https://github.com/LineageOS/android_kernel_xiaomi_sdm845"
+KERNEL_BRANCH="lineage-21"
+KERNEL_CONFIG="sdm845_defconfig"
 KERNEL_CONFIG_2="vendor/xiaomi/dipper.config"
 KERNEL_IMAGE="Image.gz-dtb"
 ARCH="arm64"
