@@ -59,7 +59,7 @@ KP_VERSION="latest"
 # 尝试画个大饼 实测报错 有需要自行研究吧 TNND毁灭吧
 CONFIG_KVM="false"
 LXC="true"
-LXC_PATCH="true"
+LXC_PATCH="false"
 KALI_NETHUNTER="false"
 KALI_NETHUNTER_PATCH="false"
 
