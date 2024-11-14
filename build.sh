@@ -24,8 +24,8 @@ BOOT_SOURCE="https://mirrorbits.lineageos.org/full/dipper/20241109/boot.img"
 CLANG_AOSP="false"
 AOSP_BRANCH="main"
 AOSP_VERSION="r487747c"
-OTHER_CLANG="https://bitbucket.org/thexperienceproject/yuki-clang.git"
-OTHER_BRANCH="18.0.0"
+OTHER_CLANG="https://gitlab.com/LeCmnGend/clang.git"
+OTHER_BRANCH="clang-19"
 CLANG_BIN="$WORK/clang/bin"
 
 # Clang-AOSP：https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+refs
