@@ -44,12 +44,12 @@ GCC_ARM_DIR="$WORK/clang/arm-linux-gnueabi/bin"
 KERNELSU="true"
 KERNELSU_TAG="v0.9.5"
 KPROBES_CONFIG="true"
-OVERLAYFS_CONFIG="true"
+OVERLAYFS_CONFIG="false"
 APPLY_KSU_PATCH="true"
 DISABLELTO="false"
 DISABLE_CC_WERROR="true"
 
-ENABLE_CCACHE="true"
+ENABLE_CCACHE="false"
 
 APATCH="false"
 APATCH_BUILD="false"
@@ -350,7 +350,7 @@ build_kernel() {
     else
         CC="clang"
     fi
-    make -j$(nproc --all) CC="$CC" $args $KERNEL_CONFIG 2>&1 | tee -a $BUILD_LOG
+    make -j$(nproc --all) CC="$CC" $args 2>&1 | tee -a $BUILD_LOG
     if [ -f out/arch/$ARCH/boot/$KERNEL_IMAGE ]; then
         BUILD_SUCCESS="true"
     else
