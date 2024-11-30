@@ -1,5 +1,6 @@
 name: Build ubuntu rootfs
 on:
+  push:
   workflow_dispatch:
     inputs:
       target_arch:
