@@ -7,9 +7,9 @@ set -eux
 export WORK="$(pwd)/workspace"
 export HOST_ARCH=$(dpkg --print-architecture)
 
-KERNEL_SOURCE="https://github.com/LineageOS/android_kernel_xiaomi_sdm845"
-KERNEL_BRANCH="lineage-21"
-KERNEL_CONFIG="sdm845_defconfig"
+KERNEL_SOURCE="https://github.com/PainKiller3/kernel_xiaomi_sdm845"
+KERNEL_BRANCH="thirteen"
+KERNEL_CONFIG="vendor/xiaomi/silvercore_defconfig"
 KERNEL_CONFIG_2="vendor/xiaomi/dipper.config"
 KERNEL_IMAGE="Image.gz-dtb"
 ARCH="arm64"
@@ -39,7 +39,7 @@ GCC_32_SOURCE="https://android.googlesource.com/platform/prebuilts/gcc/linux-x86
 GCC_32_BRANCH="gcc-master"
 GCC_ARM_DIR="$WORK/gcc-32/bin"
 
-KERNELSU="true"
+KERNELSU="false"
 KERNELSU_TAG="v0.9.5"
 APPLY_KSU_PATCH="true"
 OVERLAYFS_CONFIG="true"
@@ -216,6 +216,7 @@ setup_kernelsu() {
     fi
 }
 
+# 加进来就报错 毁灭吧
 lxc_docker() {
     if [ $LXC = "true" ]; then
         cd $WORK/$KERNEL_DIR
