@@ -1,86 +1,66 @@
-name: Build ubuntu rootfs
+name: Build Ubuntu rootfs
 on:
-  push:
   workflow_dispatch:
     inputs:
       target_arch:
-        description: "target arch:"
-        default: arm64
+        description: "Target architecture"
+        default: "amd64"  # 这里默认设置为常见的amd64架构，你可按需更改
         required: true
-      dist_version:
-        description: "dist version:"
-        default: jammy
+      ubuntu_version:
+        description: "Ubuntu version"
+        default: "jammy"  # 以Ubuntu 22.04 jammy为例，也可按需选其他版本如focal等
         required: true
 
-permissions: 
+permissions:
   contents: write
 
 jobs:
-  make_rootfs:
+  make_ubuntu_rootfs:
     runs-on: ubuntu-latest
     env:
       TARGET_ARCH: ${{ github.event.inputs.target_arch }}
-      DIST_VERSION: ${{ github.event.inputs.dist_version }}
-      RELEASE_NAME: ubuntu-rootfs-${{ github.event.inputs.dist_version }}-${{ github.event.inputs.target_arch }}
-
+      UBUNTU_VERSION: ${{ github.event.inputs.ubuntu_version }}
+      RELEASE_NAME: ubuntu-rootfs-${{ github.event.inputs.ubuntu_version }}-${{ github.event.inputs.target_arch }}
     steps:
       - name: Install dependencies
         run: |
-          sudo apt install -y mmdebstrap binfmt-support qemu-user-static arch-test
+          sudo apt update
+          sudo apt install -y debootstrap qemu-user-static binfmt-support
 
       - name: Make rootfs
         run: |
           echo ${TARGET_ARCH}
-          echo ${DIST_VERSION}
+          echo ${UBUNTU_VERSION}
           echo ${RELEASE_NAME}
 
-          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys \
-            0E98404D386FA1D9 \
-            6ED0E7B82643E131 \
-            F8D2585B8783D481 \
-            54404762BBB6E853 \
-            BDE6D2B9216EC7A8
-
-          sudo mmdebstrap \
-            "${DIST_VERSION}" \
-            --architectures=${TARGET_ARCH} \
+          sudo debootstrap \
+            --arch=${TARGET_ARCH} \
             --variant=minbase \
-            --components="main,restricted,universe,multiverse" \
-            --skip=download/empty \
-            --include="ca-certificates,xz-utils" \
-            --setup-hook='cat $1/etc/apt/sources.list' \
-            --customize-hook='echo "\
-          nameserver 8.8.8.8
-          nameserver 8.8.4.4\
-          " > $1/etc/resolv.conf' \
-            --customize-hook='echo "\
-          # IPv4.
-          127.0.0.1   localhost.localdomain localhost
+            "${UBUNTU_VERSION}" \
+            rootfs \
+            "http://archive.ubuntu.com/ubuntu/"  # 这里使用官方源，也可替换为国内镜像源提升速度
 
-          # IPv6.
-          ::1         localhost.localdomain localhost ip6-localhost ip6-loopback
-          fe00::0     ip6-localnet
-          ff00::0     ip6-mcastprefix
-          ff02::1     ip6-allnodes
-          ff02::2     ip6-allrouters
-          ff02::3     ip6-allhosts\
-          " > $1/etc/hosts' \
-            - | tar -cf "${RELEASE_NAME}.tar" -
+          # 进行一些自定义配置，比如设置DNS等（示例，可按需扩展更多配置）
+          sudo cp /etc/resolv.conf rootfs/etc/resolv.conf
+          echo "127.0.0.1   localhost.localdomain localhost" | sudo tee rootfs/etc/hosts
+          echo "::1         localhost.localdomain localhost ip6-localhost ip6-loopback" | sudo tee -a rootfs/etc/hosts
+
+          sudo tar --exclude='dev/*' -czf "${RELEASE_NAME}.tar.gz" rootfs
 
       - name: Package output
-        run: xz -kf -T0  "${RELEASE_NAME}.tar"
+        run: gzip -kf -9 "${RELEASE_NAME}.tar"
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@main
         with:
-          name: ubuntu-rootfs-${{ github.event.inputs.dist_version }}-${{ github.event.inputs.target_arch }}.tar.xz
-          path: ubuntu-rootfs-${{ github.event.inputs.dist_version }}-${{ github.event.inputs.target_arch }}.tar.xz
+          name: ubuntu-rootfs-${{ github.event.inputs.ubuntu_version }}-${{ github.event.inputs.target_arch }}.tar.gz
+          path: ubuntu-rootfs-${{ github.event.inputs.ubuntu_version }}-${{ github.event.inputs.target_arch }}.tar.gz
 
       - name: Upload release
         uses: ncipollo/release-action@v1.14.0
         with:
           prerelease: true
           tag: "ubuntu-rootfs"
-          artifacts: ubuntu-rootfs-${{ github.event.inputs.dist_version }}-${{ github.event.inputs.target_arch }}.tar.xz
+          artifacts: ubuntu-rootfs-${{ github.event.inputs.ubuntu_version }}-${{ github.event.inputs.target_arch }}.tar.gz
           allowUpdates: true
           replacesArtifacts: true
           body: |
