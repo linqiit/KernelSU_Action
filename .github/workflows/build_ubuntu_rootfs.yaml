@@ -65,7 +65,7 @@ jobs:
           ff02::2     ip6-allrouters
           ff02::3     ip6-allhosts\
           " > $1/etc/hosts' \
-            - | tar --delete --wildcards "./dev/*" > "${RELEASE_NAME}.tar"
+            - | tar -cf "${RELEASE_NAME}.tar" -
 
       - name: Package output
         run: xz -kf -T0  "${RELEASE_NAME}.tar"
