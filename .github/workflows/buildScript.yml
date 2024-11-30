@@ -1,7 +1,6 @@
 name: Build Kernel Script
 
 on:
-  push:
   workflow_dispatch:
 
 jobs:
