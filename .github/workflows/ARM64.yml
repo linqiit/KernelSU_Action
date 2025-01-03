@@ -1,0 +1,31 @@
+name: Build and Test on ARM64
+
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install QEMU
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu qemu-user-static binfmt-support
+          docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+
+      - name: Run ARM64 Docker Container
+        run: |
+          docker run --rm --platform linux/arm64 -v $(pwd):/workspace -w /workspace arm64v8/ubuntu:22.04 /bin/bash -c "
+          uname -m && 
+          apt-get update && 
+          apt-get install -y build-essential && 
+          make && 
+          ./test_binary
+          "
+
+      - name: Verify Architecture
+        run: docker run --rm --platform linux/arm64 arm64v8/ubuntu uname -m
