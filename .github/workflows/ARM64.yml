@@ -1,7 +1,8 @@
 name: Build and Test on ARM64
 
 on:
-  push:
+  # push:
+  workflow_dispatch:
 
 jobs:
   build:

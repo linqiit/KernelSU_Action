@@ -1,0 +1,74 @@
+name: Build Static Bash on ARM64
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Cache Dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            /var/cache/apt
+            bash-5.2.37.tar.gz
+          key: ${{ runner.os }}-deps-${{ hashFiles('**/apt-packages.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-deps-
+
+      - name: Build Bash on ARM64
+        uses: uraimo/run-on-arch-action@v2.8.1
+        with:
+          arch: aarch64
+          distro: ubuntu22.04
+          dockerRunArgs: |
+            --volume "${{ github.workspace }}:/workspace"
+          run: |
+            set -ex  # 启用调试模式并遇到错误时停止
+            cd /workspace
+
+            # 安装必要的依赖
+            apt-get update && apt-get install -y \
+              build-essential wget uxp xz-utils \
+              gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu make \
+              libc6-dev-arm64-cross \
+              libncurses-dev libreadline-dev
+
+            # 下载并解压 Bash 源码
+            wget https://ftp.gnu.org/gnu/bash/bash-5.2.37.tar.gz
+            echo "expected_checksum  bash-5.2.37.tar.gz" | sha256sum -c
+            tar -xf bash-5.2.37.tar.gz
+            cd bash-5.2.37
+
+            # 设置编译环境（静态链接）
+            export CC="aarch64-linux-gnu-gcc"
+            export CFLAGS="-O2 -fPIC"
+            export LDFLAGS="-static"
+            export LIBS="-lncurses -lreadline"
+
+            # 配置 Bash 编译选项
+            ./configure --host=aarch64-linux-gnu \
+                        --disable-nls \          # 可选，禁用国际化
+                        --without-bash-malloc \  # 使用系统内存分配器
+                        --enable-static-link     # 静态链接
+
+            # 编译 Bash
+            make || { echo "Make failed"; exit 1; }
+
+            # 移除调试符号并压缩二进制文件
+            strip --strip-all bash
+            upx --best --lzma bash  # 可选，进一步压缩二进制文件
+
+            # 将编译好的 Bash 复制到工作目录
+            cp bash /workspace/bash-static-arm64
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: bash-static-arm64-${{ github.run_id }}
+          path: bash-static-arm64
