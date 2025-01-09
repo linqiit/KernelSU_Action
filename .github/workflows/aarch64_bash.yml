@@ -34,7 +34,7 @@ jobs:
 
             # 安装必要的依赖
             apt-get update && apt-get install -y \
-              build-essential wget uxp xz-utils \
+              build-essential wget upx xz-utils \
               gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu make \
               libc6-dev-arm64-cross \
               libncurses-dev libreadline-dev
